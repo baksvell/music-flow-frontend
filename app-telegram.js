@@ -14,6 +14,7 @@ document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.th
 
 // API Configuration - try multiple endpoints
 const API_ENDPOINTS = [
+    'http://localhost:8000/tracks',
     'https://mysicflow.onrender.com/tracks',
     'https://mysicflow.onrender.com/music',
     'https://mysicflow.onrender.com/api/tracks',
