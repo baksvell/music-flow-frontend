@@ -135,6 +135,27 @@ function safeShowAlert(message) {
     }
 }
 
+async function incrementPlayCount(trackId) {
+    if (!trackId) return;
+    
+    try {
+        const response = await fetch(`https://mysicflow.onrender.com/tracks/${trackId}/play`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (response.ok) {
+            console.log(`Play count incremented for track ${trackId}`);
+        } else {
+            console.log(`Failed to increment play count for track ${trackId}`);
+        }
+    } catch (error) {
+        console.error('Error incrementing play count:', error);
+    }
+}
+
 function setupEventListeners() {
     // Search functionality
     const searchInput = document.getElementById('searchInput');
@@ -398,6 +419,9 @@ function playTrack(index) {
             artist: currentTrack.artist || currentTrack.performer
         });
         
+        // Increment play count in database
+        incrementPlayCount(currentTrack.id);
+        
         // Don't show alert on successful play to avoid popup conflicts
         
     }).catch((error) => {
@@ -407,7 +431,7 @@ function playTrack(index) {
         if (currentTrack.file_id && currentTrack.file_id.startsWith('demo')) {
             safeShowAlert('Демо трек - аудио недоступно. Добавьте реальную музыку в группу!');
         } else {
-            safeShowAlert('Ошибка воспроизведения: ' + error.message + '\n\nПроверьте, что файл существует в Telegram группе.');
+            safeShowAlert('Ошибка воспроизведения: ' + error.message + '\n\nАудио файлы хранятся в базе данных SQLite.');
         }
     }).finally(() => {
         // Reset flag after a delay to allow for normal playback
