@@ -28,6 +28,7 @@ let allTracks = [];
 let searchQuery = '';
 let telegramUserId = null;
 let apiWorking = false;
+let audioPlayer = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -44,10 +45,52 @@ function initializeApp() {
         console.log('Telegram User ID:', telegramUserId);
     }
     
+    // Initialize audio player
+    initializeAudioPlayer();
+    
     updatePlayerDisplay();
     showLoading(false);
 
     console.log('Music Flow для Telegram загружен! 🎵');
+}
+
+function initializeAudioPlayer() {
+    // Create audio element
+    audioPlayer = new Audio();
+    audioPlayer.preload = 'metadata';
+    
+    // Add event listeners
+    audioPlayer.addEventListener('loadstart', function() {
+        console.log('Audio loading started');
+    });
+    
+    audioPlayer.addEventListener('canplay', function() {
+        console.log('Audio can play');
+    });
+    
+    audioPlayer.addEventListener('play', function() {
+        console.log('Audio started playing');
+        isPlaying = true;
+        updatePlayButton();
+    });
+    
+    audioPlayer.addEventListener('pause', function() {
+        console.log('Audio paused');
+        isPlaying = false;
+        updatePlayButton();
+    });
+    
+    audioPlayer.addEventListener('ended', function() {
+        console.log('Audio ended');
+        isPlaying = false;
+        updatePlayButton();
+        playNext();
+    });
+    
+    audioPlayer.addEventListener('error', function(e) {
+        console.error('Audio error:', e);
+        tg.showAlert('Ошибка воспроизведения аудио');
+    });
 }
 
 function setupEventListeners() {
@@ -279,27 +322,60 @@ function playTrack(index) {
     if (index < 0 || index >= allTracks.length) return;
     
     currentTrack = allTracks[index];
-    isPlaying = true;
     
-    updatePlayerDisplay();
-    updatePlayButton();
+    // Get audio URL
+    const audioUrl = getAudioUrl(currentTrack);
+    if (!audioUrl) {
+        tg.showAlert('Аудио файл недоступен');
+        return;
+    }
     
-    // Send to Telegram bot
-    sendDataToBot('track_played', {
-        track_id: currentTrack.id || index,
-        title: currentTrack.title || currentTrack.name,
-        artist: currentTrack.artist || currentTrack.performer
+    // Load and play audio
+    audioPlayer.src = audioUrl;
+    audioPlayer.load();
+    
+    // Try to play
+    audioPlayer.play().then(() => {
+        console.log('Audio playing successfully');
+        updatePlayerDisplay();
+        updatePlayButton();
+        
+        // Send to Telegram bot
+        sendDataToBot('track_played', {
+            track_id: currentTrack.id || index,
+            title: currentTrack.title || currentTrack.name,
+            artist: currentTrack.artist || currentTrack.performer
+        });
+        
+        // Show Telegram notification
+        tg.showAlert(`Воспроизводится: ${currentTrack.title || currentTrack.name}`);
+        
+    }).catch((error) => {
+        console.error('Error playing audio:', error);
+        tg.showAlert('Ошибка воспроизведения: ' + error.message);
     });
+}
+
+function getAudioUrl(track) {
+    // Try different URL patterns
+    const fileId = track.file_id;
+    if (!fileId) return null;
     
-    // Show Telegram notification
-    tg.showAlert(`Воспроизводится: ${currentTrack.title || currentTrack.name}`);
+    // Use proxy endpoint from our API
+    return `https://mysicflow.onrender.com/proxy-audio/${fileId}`;
 }
 
 function togglePlay() {
-    if (!currentTrack) return;
+    if (!currentTrack || !audioPlayer) return;
     
-    isPlaying = !isPlaying;
-    updatePlayButton();
+    if (isPlaying) {
+        audioPlayer.pause();
+    } else {
+        audioPlayer.play().catch((error) => {
+            console.error('Error playing audio:', error);
+            tg.showAlert('Ошибка воспроизведения: ' + error.message);
+        });
+    }
     
     sendDataToBot('play_toggled', {
         is_playing: isPlaying,
