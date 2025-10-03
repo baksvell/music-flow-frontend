@@ -1,0 +1,13 @@
+{
+  "name": "music-flow-frontend",
+  "version": "1.0.0",
+  "description": "Music Flow Telegram Mini App Frontend",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'No build step required'",
+    "dev": "echo 'Open index.html in browser'"
+  },
+  "keywords": ["telegram", "music", "mini-app"],
+  "author": "baksvell",
+  "license": "MIT"
+}
