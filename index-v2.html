@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MusicFlow v2 - Enhanced Music Player</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style-v2.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <button class="menu-btn" onclick="toggleMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="logo">🎵 MusicFlow v2</h1>
+                <div class="header-actions">
+                    <button class="search-btn" onclick="showSearch()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button class="profile-btn" onclick="showProfile()">
+                        <i class="fas fa-user"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <ul class="nav-menu">
+                    <li class="nav-item active" onclick="showSection('home')">
+                        <i class="fas fa-home"></i>
+                        <span>Главная</span>
+                    </li>
+                    <li class="nav-item" onclick="showSection('search')">
+                        <i class="fas fa-search"></i>
+                        <span>Поиск</span>
+                    </li>
+                    <li class="nav-item" onclick="showSection('library')">
+                        <i class="fas fa-music"></i>
+                        <span>Моя медиатека</span>
+                    </li>
+                    <li class="nav-item" onclick="showSection('profile')">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Статистика</span>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                <div class="spinner"></div>
+                <span>Загрузка...</span>
+            </div>
+
+            <!-- Home Section -->
+            <section id="homeSection" class="section active">
+                <div class="section-header">
+                    <h2>Все треки</h2>
+                    <div class="section-controls">
+                        <select id="sortSelect" class="sort-select">
+                            <option value="date_desc">По дате (новые)</option>
+                            <option value="date_asc">По дате (старые)</option>
+                            <option value="title_asc">По названию (А-Я)</option>
+                            <option value="title_desc">По названию (Я-А)</option>
+                            <option value="artist_asc">По исполнителю (А-Я)</option>
+                            <option value="artist_desc">По исполнителю (Я-А)</option>
+                            <option value="play_count_desc">По популярности</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="tracksContainer" class="tracks-container">
+                    <!-- Tracks will be loaded here -->
+                </div>
+                
+                <button id="loadMoreBtn" class="load-more-btn" onclick="loadTracks(currentPage + 1)" style="display: none;">
+                    Загрузить еще
+                </button>
+            </section>
+
+            <!-- Search Section -->
+            <section id="searchSection" class="section">
+                <div class="section-header">
+                    <h2>Поиск</h2>
+                </div>
+                
+                <div class="search-container">
+                    <div class="search-input-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Поиск по названию, исполнителю..." class="search-input">
+                    </div>
+                    
+                    <div class="filters-container">
+                        <div class="filter-group">
+                            <label for="artistFilter">Исполнитель:</label>
+                            <select id="artistFilter" class="filter-select">
+                                <option value="">Все исполнители</option>
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="genreFilter">Жанр:</label>
+                            <select id="genreFilter" class="filter-select">
+                                <option value="">Все жанры</option>
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="searchResults" class="tracks-container">
+                    <!-- Search results will be displayed here -->
+                </div>
+            </section>
+
+            <!-- Library Section -->
+            <section id="librarySection" class="section">
+                <div class="section-header">
+                    <h2>Моя медиатека</h2>
+                </div>
+                
+                <div class="library-content">
+                    <div class="library-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-music"></i>
+                            <span>Избранные треки</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-history"></i>
+                            <span>Недавно прослушанные</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-list"></i>
+                            <span>Плейлисты</span>
+                        </div>
+                    </div>
+                    
+                    <div class="library-tabs">
+                        <button class="tab-btn active" onclick="showLibraryTab('favorites')">
+                            <i class="fas fa-heart"></i>
+                            Избранное
+                        </button>
+                        <button class="tab-btn" onclick="showLibraryTab('recent')">
+                            <i class="fas fa-clock"></i>
+                            Недавние
+                        </button>
+                        <button class="tab-btn" onclick="showLibraryTab('playlists')">
+                            <i class="fas fa-list"></i>
+                            Плейлисты
+                        </button>
+                    </div>
+                    
+                    <div id="libraryContent" class="library-tabs-content">
+                        <!-- Library content will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile/Stats Section -->
+            <section id="profileSection" class="section">
+                <div class="section-header">
+                    <h2>Статистика</h2>
+                </div>
+                
+                <div id="statsContainer" class="stats-container">
+                    <!-- Statistics will be loaded here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Player -->
+        <div class="player" id="player">
+            <div class="player-content">
+                <div class="track-info">
+                    <div class="track-title" id="currentTrackTitle">Выберите трек</div>
+                    <div class="track-artist" id="currentTrackArtist">для воспроизведения</div>
+                </div>
+                
+                <div class="player-controls">
+                    <button class="control-btn" id="shuffleBtn" onclick="toggleShuffle()">
+                        <i class="fas fa-random"></i>
+                    </button>
+                    <button class="control-btn" id="prevBtn" onclick="playPrevious()">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button class="control-btn" id="nextBtn" onclick="playNext()">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                    <button class="control-btn" id="repeatBtn" onclick="toggleRepeat()">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+                
+                <div class="player-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                        <div class="progress-handle"></div>
+                    </div>
+                    <div class="time-display">
+                        <span class="current-time">0:00</span>
+                        <span class="total-time">0:00</span>
+                    </div>
+                </div>
+                
+                <div class="volume-control">
+                    <i class="fas fa-volume-up"></i>
+                    <div class="volume-bar">
+                        <div class="volume-fill"></div>
+                        <div class="volume-handle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app-v2.js"></script>
+</body>
+</html>
