@@ -30,6 +30,8 @@ let telegramUserId = null;
 let apiWorking = false;
 let audioPlayer = null;
 let popupOpen = false;
+let isPlayingTrack = false; // Prevent multiple play calls
+let lastClickTime = 0; // Prevent rapid clicks
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -73,12 +75,28 @@ function initializeAudioPlayer() {
         console.log('Audio started playing');
         isPlaying = true;
         updatePlayButton();
+        
+        // Send play event only once
+        if (currentTrack) {
+            sendDataToBot('play_toggled', {
+                is_playing: true,
+                track_id: currentTrack.id
+            });
+        }
     });
     
     audioPlayer.addEventListener('pause', function() {
         console.log('Audio paused');
         isPlaying = false;
         updatePlayButton();
+        
+        // Send pause event only once
+        if (currentTrack) {
+            sendDataToBot('play_toggled', {
+                is_playing: false,
+                track_id: currentTrack.id
+            });
+        }
     });
     
     audioPlayer.addEventListener('ended', function() {
@@ -343,12 +361,20 @@ function handleSearch(event) {
 function playTrack(index) {
     if (index < 0 || index >= allTracks.length) return;
     
+    // Prevent multiple play calls
+    if (isPlayingTrack) {
+        console.log('Already playing a track, skipping...');
+        return;
+    }
+    
+    isPlayingTrack = true;
     currentTrack = allTracks[index];
     
     // Get audio URL
     const audioUrl = getAudioUrl(currentTrack);
     if (!audioUrl) {
-        tg.showAlert('Аудио файл недоступен');
+        safeShowAlert('Аудио файл недоступен');
+        isPlayingTrack = false;
         return;
     }
     
@@ -378,6 +404,11 @@ function playTrack(index) {
         if (!currentTrack.file_id || !currentTrack.file_id.startsWith('demo')) {
             safeShowAlert('Ошибка воспроизведения: ' + error.message);
         }
+    }).finally(() => {
+        // Reset flag after a delay to allow for normal playback
+        setTimeout(() => {
+            isPlayingTrack = false;
+        }, 1000);
     });
 }
 
@@ -399,19 +430,24 @@ function getAudioUrl(track) {
 function togglePlay() {
     if (!currentTrack || !audioPlayer) return;
     
+    // Prevent rapid clicks (debounce)
+    const now = Date.now();
+    if (now - lastClickTime < 500) {
+        console.log('Rapid click detected, ignoring...');
+        return;
+    }
+    lastClickTime = now;
+    
     if (isPlaying) {
         audioPlayer.pause();
+        // Don't send event here, let the pause event handle it
     } else {
         audioPlayer.play().catch((error) => {
             console.error('Error playing audio:', error);
             safeShowAlert('Ошибка воспроизведения: ' + error.message);
         });
+        // Don't send event here, let the play event handle it
     }
-    
-    sendDataToBot('play_toggled', {
-        is_playing: isPlaying,
-        track_id: currentTrack.id
-    });
 }
 
 function playPrevious() {
