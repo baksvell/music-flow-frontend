@@ -613,3 +613,4 @@ window.toggleFavorite = function(trackId) {
     // Implementation for favorite toggle
     console.log('Toggle favorite for track:', trackId);
 };
+
