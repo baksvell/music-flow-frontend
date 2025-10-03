@@ -32,6 +32,7 @@ let audioPlayer = null;
 let popupOpen = false;
 let isPlayingTrack = false; // Prevent multiple play calls
 let lastClickTime = 0; // Prevent rapid clicks
+let lastTrackSwitchTime = 0; // Prevent rapid track switches
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -103,7 +104,8 @@ function initializeAudioPlayer() {
         console.log('Audio ended');
         isPlaying = false;
         updatePlayButton();
-        playNext();
+        // Don't auto-play next track to prevent loops
+        // playNext();
     });
     
     audioPlayer.addEventListener('error', function(e) {
@@ -453,18 +455,36 @@ function togglePlay() {
 function playPrevious() {
     if (!currentTrack) return;
     
+    // Prevent rapid track switches
+    const now = Date.now();
+    if (now - lastTrackSwitchTime < 2000) {
+        console.log('Rapid track switch detected, ignoring...');
+        return;
+    }
+    lastTrackSwitchTime = now;
+    
     const currentIndex = allTracks.findIndex(track => track === currentTrack);
     const prevIndex = currentIndex > 0 ? currentIndex - 1 : allTracks.length - 1;
     
+    console.log(`Switching from track ${currentIndex} to ${prevIndex}`);
     playTrack(prevIndex);
 }
 
 function playNext() {
     if (!currentTrack) return;
     
+    // Prevent rapid track switches
+    const now = Date.now();
+    if (now - lastTrackSwitchTime < 2000) {
+        console.log('Rapid track switch detected, ignoring...');
+        return;
+    }
+    lastTrackSwitchTime = now;
+    
     const currentIndex = allTracks.findIndex(track => track === currentTrack);
     const nextIndex = currentIndex < allTracks.length - 1 ? currentIndex + 1 : 0;
     
+    console.log(`Switching from track ${currentIndex} to ${nextIndex}`);
     playTrack(nextIndex);
 }
 
