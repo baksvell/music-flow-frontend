@@ -17,7 +17,7 @@ document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.th
 // const API_BASE_URL = 'https://YOUR_NGROK_URL.ngrok.io'; // Для продакшена
 // const API_BASE_URL = 'https://fair-moles-worry.loca.lt'; // Для LocalTunnel
 // const API_BASE_URL = 'https://YOUR_RAILWAY_URL.railway.app'; // Замените на ваш Railway URL
-const API_BASE_URL = 'http://localhost:8000'; // Local API for testing
+const API_BASE_URL = 'https://mysicflow.onrender.com'; // Render.com API
 
 // App State
 let currentSection = 'home';
