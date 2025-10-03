@@ -12,9 +12,8 @@ document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themePara
 document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#2481cc');
 document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
 
-// API Configuration - try multiple endpoints
+// API Configuration - only Render endpoints for Telegram
 const API_ENDPOINTS = [
-    'http://localhost:8000/tracks',
     'https://mysicflow.onrender.com/tracks',
     'https://mysicflow.onrender.com/music',
     'https://mysicflow.onrender.com/api/tracks',
