@@ -89,7 +89,7 @@ function initializeAudioPlayer() {
     
     audioPlayer.addEventListener('error', function(e) {
         console.error('Audio error:', e);
-        tg.showAlert('Ошибка воспроизведения аудио');
+        // Don't show alert immediately, let playTrack handle it
     });
 }
 
@@ -352,7 +352,13 @@ function playTrack(index) {
         
     }).catch((error) => {
         console.error('Error playing audio:', error);
-        tg.showAlert('Ошибка воспроизведения: ' + error.message);
+        
+        // Check if it's a demo track
+        if (currentTrack.file_id && currentTrack.file_id.startsWith('demo')) {
+            tg.showAlert('Демо трек - аудио недоступно. Добавьте реальную музыку в группу!');
+        } else {
+            tg.showAlert('Ошибка воспроизведения: ' + error.message);
+        }
     });
 }
 
@@ -361,7 +367,13 @@ function getAudioUrl(track) {
     const fileId = track.file_id;
     if (!fileId) return null;
     
-    // Use proxy endpoint from our API
+    // For demo tracks, use a test audio file
+    if (fileId.startsWith('demo')) {
+        // Use a free test audio file from the internet
+        return 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav';
+    }
+    
+    // Use proxy endpoint from our API for real tracks
     return `https://mysicflow.onrender.com/proxy-audio/${fileId}`;
 }
 
