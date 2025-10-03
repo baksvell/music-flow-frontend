@@ -381,6 +381,7 @@ function playTrack(index) {
     }
     
     // Load and play audio
+    console.log(`Loading audio from: ${audioUrl}`);
     audioPlayer.src = audioUrl;
     audioPlayer.load();
     
@@ -402,9 +403,11 @@ function playTrack(index) {
     }).catch((error) => {
         console.error('Error playing audio:', error);
         
-        // Only show alert for real errors, not demo tracks
-        if (!currentTrack.file_id || !currentTrack.file_id.startsWith('demo')) {
-            safeShowAlert('Ошибка воспроизведения: ' + error.message);
+        // Show different messages for demo vs real tracks
+        if (currentTrack.file_id && currentTrack.file_id.startsWith('demo')) {
+            safeShowAlert('Демо трек - аудио недоступно. Добавьте реальную музыку в группу!');
+        } else {
+            safeShowAlert('Ошибка воспроизведения: ' + error.message + '\n\nПроверьте, что файл существует в Telegram группе.');
         }
     }).finally(() => {
         // Reset flag after a delay to allow for normal playback
@@ -425,7 +428,8 @@ function getAudioUrl(track) {
         return 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav';
     }
     
-    // Use proxy endpoint from our API for real tracks
+    // For real tracks, use our Telegram file proxy
+    console.log(`Getting audio URL for real track: ${fileId}`);
     return `https://mysicflow.onrender.com/proxy-audio/${fileId}`;
 }
 
