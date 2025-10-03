@@ -29,6 +29,7 @@ let searchQuery = '';
 let telegramUserId = null;
 let apiWorking = false;
 let audioPlayer = null;
+let popupOpen = false;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -91,6 +92,27 @@ function initializeAudioPlayer() {
         console.error('Audio error:', e);
         // Don't show alert immediately, let playTrack handle it
     });
+}
+
+function safeShowAlert(message) {
+    if (popupOpen) {
+        console.log('Popup already open, skipping alert:', message);
+        return;
+    }
+    
+    try {
+        popupOpen = true;
+        tg.showAlert(message);
+        
+        // Reset popup flag after a delay
+        setTimeout(() => {
+            popupOpen = false;
+        }, 1000);
+        
+    } catch (e) {
+        console.log('Could not show alert:', e);
+        popupOpen = false;
+    }
 }
 
 function setupEventListeners() {
@@ -347,17 +369,14 @@ function playTrack(index) {
             artist: currentTrack.artist || currentTrack.performer
         });
         
-        // Show Telegram notification
-        tg.showAlert(`Воспроизводится: ${currentTrack.title || currentTrack.name}`);
+        // Don't show alert on successful play to avoid popup conflicts
         
     }).catch((error) => {
         console.error('Error playing audio:', error);
         
-        // Check if it's a demo track
-        if (currentTrack.file_id && currentTrack.file_id.startsWith('demo')) {
-            tg.showAlert('Демо трек - аудио недоступно. Добавьте реальную музыку в группу!');
-        } else {
-            tg.showAlert('Ошибка воспроизведения: ' + error.message);
+        // Only show alert for real errors, not demo tracks
+        if (!currentTrack.file_id || !currentTrack.file_id.startsWith('demo')) {
+            safeShowAlert('Ошибка воспроизведения: ' + error.message);
         }
     });
 }
@@ -385,7 +404,7 @@ function togglePlay() {
     } else {
         audioPlayer.play().catch((error) => {
             console.error('Error playing audio:', error);
-            tg.showAlert('Ошибка воспроизведения: ' + error.message);
+            safeShowAlert('Ошибка воспроизведения: ' + error.message);
         });
     }
     
