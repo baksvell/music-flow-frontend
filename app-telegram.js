@@ -462,6 +462,8 @@ function setVolumeTouch(event) {
     const clickY = touch.clientY - rect.top;
     const percentage = Math.max(0, Math.min(1, 1 - (clickY / rect.height))); // Invert Y axis
     
+    console.log(`Touch event - Y: ${clickY}, Height: ${rect.height}, Percentage: ${(percentage * 100).toFixed(0)}%`);
+    
     currentVolume = percentage;
     updateVolumeDisplay();
     updateAudioVolume();
@@ -485,12 +487,16 @@ function updateVolumeDisplay() {
     const volumeHandle = document.getElementById('volumeHandle');
     const volumeIcon = document.getElementById('volumeIcon');
     
+    console.log(`Updating volume display: ${(currentVolume * 100).toFixed(0)}%`);
+    
     if (volumeFill) {
         volumeFill.style.height = (currentVolume * 100) + '%';
+        console.log(`Volume fill height set to: ${volumeFill.style.height}`);
     }
     
     if (volumeHandle) {
         volumeHandle.style.bottom = (currentVolume * 100) + '%';
+        console.log(`Volume handle bottom set to: ${volumeHandle.style.bottom}`);
     }
     
     if (volumeIcon) {
@@ -506,13 +512,28 @@ function updateVolumeDisplay() {
                 icon.className = 'fas fa-volume-up';
                 volumeIcon.classList.remove('muted');
             }
+            console.log(`Volume icon updated to: ${icon.className}`);
         }
     }
 }
 
 function updateAudioVolume() {
     if (audioPlayer) {
-        audioPlayer.volume = isMuted ? 0 : currentVolume;
+        const newVolume = isMuted ? 0 : currentVolume;
+        audioPlayer.volume = newVolume;
+        console.log(`Audio volume updated: ${(newVolume * 100).toFixed(0)}% (muted: ${isMuted})`);
+        
+        // Force volume update on mobile devices
+        if (audioPlayer.volume !== newVolume) {
+            console.warn(`Volume mismatch! Set: ${newVolume}, Actual: ${audioPlayer.volume}`);
+            // Try to force set volume again
+            setTimeout(() => {
+                audioPlayer.volume = newVolume;
+                console.log(`Volume force-updated to: ${audioPlayer.volume}`);
+            }, 10);
+        }
+    } else {
+        console.warn('Audio player not available for volume update');
     }
 }
 
@@ -587,6 +608,8 @@ function handleVolumeDragTouch(event) {
     const touch = event.touches[0];
     const touchY = touch.clientY - rect.top;
     const percentage = Math.max(0, Math.min(1, 1 - (touchY / rect.height))); // Invert Y axis
+    
+    console.log(`Touch drag - Y: ${touchY}, Height: ${rect.height}, Percentage: ${(percentage * 100).toFixed(0)}%`);
     
     currentVolume = percentage;
     updateVolumeDisplay();
@@ -1056,6 +1079,9 @@ function playTrack(index) {
     audioPlayer.src = audioUrl;
     audioPlayer.load();
     
+    // Set volume before playing
+    updateAudioVolume();
+    
     // Try to play
     audioPlayer.play().then(() => {
         console.log('Audio playing successfully');
@@ -1134,6 +1160,9 @@ function togglePlay() {
         audioPlayer.pause();
         // Don't send event here, let the pause event handle it
     } else {
+        // Set volume before playing
+        updateAudioVolume();
+        
         audioPlayer.play().catch((error) => {
             console.error('Error playing audio:', error);
             safeShowAlert('Ошибка воспроизведения: ' + error.message);
