@@ -123,12 +123,13 @@
                             <div class="volume-slider" id="volumeSlider" 
                                  onclick="setVolume(event)" 
                                  onmousedown="startVolumeDrag(event)"
-                                 ontouchstart="setVolumeTouch(event)" 
+                                 ontouchstart="startVolumeDrag(event)" 
                                  ontouchend="setVolumeTouch(event)">
                                 <div class="volume-track">
                                     <div class="volume-fill" id="volumeFill"></div>
                                     <div class="volume-handle" id="volumeHandle" 
-                                         onmousedown="startVolumeDrag(event)"></div>
+                                         onmousedown="startVolumeDrag(event)"
+                                         ontouchstart="startVolumeDrag(event)"></div>
                                 </div>
                             </div>
                             <div class="volume-icon" id="volumeIcon" onclick="toggleMute()">

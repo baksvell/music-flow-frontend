@@ -641,7 +641,7 @@ body {
 
 .volume-slider {
     position: relative;
-    width: 4px;
+    width: 12px;
     height: 60px;
     cursor: pointer;
     touch-action: manipulation;
@@ -672,8 +672,8 @@ body {
     position: absolute;
     left: 50%;
     bottom: 70%;
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
     background: var(--tg-theme-button-color, #2481cc);
     border: 2px solid var(--tg-theme-bg-color, #ffffff);
     border-radius: 50%;
@@ -721,6 +721,52 @@ body {
 
 .volume-icon.muted {
     color: var(--tg-theme-hint-color, #999999);
+}
+
+/* Mobile optimizations for volume control */
+@media (max-width: 768px) {
+    .volume-slider {
+        width: 16px;
+        height: 70px;
+    }
+    
+    .volume-handle {
+        width: 20px;
+        height: 20px;
+        opacity: 0.8; /* Always visible on mobile */
+    }
+    
+    .volume-slider:hover .volume-handle {
+        opacity: 1;
+    }
+    
+    .volume-control {
+        gap: 8px;
+        margin-left: 12px;
+    }
+    
+    .volume-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .volume-handle {
+        opacity: 0.7; /* Always visible on touch devices */
+    }
+    
+    .volume-slider {
+        width: 18px;
+        height: 75px;
+    }
+    
+    .volume-handle {
+        width: 22px;
+        height: 22px;
+    }
 }
 
 .control-btn {

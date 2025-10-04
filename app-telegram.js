@@ -466,6 +466,17 @@ function setVolumeTouch(event) {
     updateVolumeDisplay();
     updateAudioVolume();
     
+    // Show handle on touch devices
+    const volumeHandle = document.getElementById('volumeHandle');
+    if (volumeHandle) {
+        volumeHandle.style.opacity = '1';
+        setTimeout(() => {
+            if (!isVolumeDragging) {
+                volumeHandle.style.opacity = '';
+            }
+        }, 1000);
+    }
+    
     console.log(`Touch volume set to: ${(currentVolume * 100).toFixed(0)}%`);
 }
 
@@ -535,12 +546,18 @@ function startVolumeDrag(event) {
         volumeHandle.style.opacity = '1';
     }
     
-    // Add global event listeners for dragging
+    // Add global event listeners for dragging (both mouse and touch)
     document.addEventListener('mousemove', handleVolumeDrag);
     document.addEventListener('mouseup', stopVolumeDrag);
+    document.addEventListener('touchmove', handleVolumeDragTouch, { passive: false });
+    document.addEventListener('touchend', stopVolumeDrag);
     
     // Handle initial drag position
-    handleVolumeDrag(event);
+    if (event.type === 'touchstart') {
+        handleVolumeDragTouch(event);
+    } else {
+        handleVolumeDrag(event);
+    }
     
     console.log('Volume drag started');
 }
@@ -560,14 +577,32 @@ function handleVolumeDrag(event) {
     updateAudioVolume();
 }
 
+function handleVolumeDragTouch(event) {
+    if (!isVolumeDragging) return;
+    
+    event.preventDefault();
+    
+    const volumeSlider = document.getElementById('volumeSlider');
+    const rect = volumeSlider.getBoundingClientRect();
+    const touch = event.touches[0];
+    const touchY = touch.clientY - rect.top;
+    const percentage = Math.max(0, Math.min(1, 1 - (touchY / rect.height))); // Invert Y axis
+    
+    currentVolume = percentage;
+    updateVolumeDisplay();
+    updateAudioVolume();
+}
+
 function stopVolumeDrag(event) {
     if (!isVolumeDragging) return;
     
     isVolumeDragging = false;
     
-    // Remove global event listeners
+    // Remove global event listeners (both mouse and touch)
     document.removeEventListener('mousemove', handleVolumeDrag);
     document.removeEventListener('mouseup', stopVolumeDrag);
+    document.removeEventListener('touchmove', handleVolumeDragTouch);
+    document.removeEventListener('touchend', stopVolumeDrag);
     
     console.log(`Volume drag ended: ${(currentVolume * 100).toFixed(0)}%`);
 }
