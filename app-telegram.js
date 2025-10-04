@@ -337,29 +337,140 @@ function seekToAlternative(event) {
     const newTime = percentage * audioPlayer.duration;
     
     console.log(`Alternative seeking to: ${newTime.toFixed(2)}s (${(percentage * 100).toFixed(1)}%)`);
+    console.log(`Audio seeking support: ${audioPlayer.seekable.length > 0 ? 'YES' : 'NO'}`);
+    console.log(`Audio ready state: ${audioPlayer.readyState}`);
+    console.log(`Audio network state: ${audioPlayer.networkState}`);
+    
+    // Check if seeking is supported
+    if (audioPlayer.seekable.length === 0) {
+        console.error('Audio seeking not supported - no seekable ranges');
+        return;
+    }
+    
+    // Check if we're in a seekable range
+    const seekableStart = audioPlayer.seekable.start(0);
+    const seekableEnd = audioPlayer.seekable.end(0);
+    console.log(`Seekable range: ${seekableStart}s - ${seekableEnd}s`);
+    
+    if (newTime < seekableStart || newTime > seekableEnd) {
+        console.error(`Seek time ${newTime}s is outside seekable range ${seekableStart}s - ${seekableEnd}s`);
+        return;
+    }
     
     // Use a more direct approach
     try {
-        // Temporarily remove event listeners
         const wasPlaying = !audioPlayer.paused;
+        console.log(`Was playing: ${wasPlaying}`);
         
         // Set time directly
         audioPlayer.currentTime = newTime;
         
-        // Force update progress bar
-        updateProgressBar();
-        
-        console.log(`Successfully seeked to: ${audioPlayer.currentTime.toFixed(2)}s`);
+        // Wait a bit and check if it worked
+        setTimeout(() => {
+            const actualTime = audioPlayer.currentTime;
+            console.log(`Actual time after seek: ${actualTime.toFixed(2)}s`);
+            
+            if (Math.abs(actualTime - newTime) > 1) {
+                console.error(`Seek failed! Expected: ${newTime.toFixed(2)}s, Got: ${actualTime.toFixed(2)}s`);
+                
+                // Try alternative approach - reload and seek
+                console.log('Trying alternative approach - reload and seek');
+                const currentSrc = audioPlayer.src;
+                audioPlayer.src = '';
+                audioPlayer.src = currentSrc;
+                audioPlayer.load();
+                
+                audioPlayer.addEventListener('canplay', function seekAfterLoad() {
+                    audioPlayer.removeEventListener('canplay', seekAfterLoad);
+                    audioPlayer.currentTime = newTime;
+                    console.log(`Alternative seek result: ${audioPlayer.currentTime.toFixed(2)}s`);
+                }, { once: true });
+            } else {
+                console.log(`Seek successful! Time: ${actualTime.toFixed(2)}s`);
+            }
+            
+            // Force update progress bar
+            updateProgressBar();
+        }, 100);
         
     } catch (error) {
         console.error('Seek error:', error);
     }
 }
 
+// Range request seeking method for streaming audio
+function seekWithRangeRequest(event) {
+    if (!audioPlayer || !audioPlayer.duration) return;
+    
+    event.stopPropagation();
+    event.preventDefault();
+    
+    const progressBar = document.getElementById('progressBar');
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+    const newTime = percentage * audioPlayer.duration;
+    
+    console.log(`Range request seeking to: ${newTime.toFixed(2)}s (${(percentage * 100).toFixed(1)}%)`);
+    
+    // For streaming audio, we need to reload with range request
+    const currentSrc = audioPlayer.src;
+    const wasPlaying = !audioPlayer.paused;
+    
+    // Calculate byte range for the seek position
+    // This is a rough estimation - actual implementation would need server support
+    const estimatedFileSize = 1000000; // 1MB estimate
+    const bytesPerSecond = estimatedFileSize / audioPlayer.duration;
+    const startByte = Math.floor(newTime * bytesPerSecond);
+    const endByte = Math.min(startByte + 100000, estimatedFileSize); // 100KB chunk
+    
+    console.log(`Requesting bytes ${startByte}-${endByte} for time ${newTime}s`);
+    
+    // Create new audio element with range request
+    const newAudio = new Audio();
+    newAudio.crossOrigin = 'anonymous';
+    
+    // Set up range request headers
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', currentSrc, true);
+    xhr.setRequestHeader('Range', `bytes=${startByte}-${endByte}`);
+    xhr.responseType = 'blob';
+    
+    xhr.onload = function() {
+        if (xhr.status === 206) { // Partial content
+            const blob = xhr.response;
+            const blobUrl = URL.createObjectURL(blob);
+            
+            // Replace current audio with new one
+            audioPlayer.src = blobUrl;
+            audioPlayer.currentTime = newTime - (startByte / bytesPerSecond);
+            audioPlayer.load();
+            
+            if (wasPlaying) {
+                audioPlayer.play().catch(e => console.log('Range seek play error:', e));
+            }
+            
+            console.log(`Range seek successful: ${audioPlayer.currentTime.toFixed(2)}s`);
+        } else {
+            console.error('Range request failed, falling back to normal seek');
+            // Fallback to normal seeking
+            audioPlayer.currentTime = newTime;
+        }
+    };
+    
+    xhr.onerror = function() {
+        console.error('Range request error, falling back to normal seek');
+        audioPlayer.currentTime = newTime;
+    };
+    
+    xhr.send();
+}
+
 // Make functions globally available
 window.seekTo = seekTo;
 window.seekToTouch = seekToTouch;
 window.seekToAlternative = seekToAlternative;
+window.seekWithRangeRequest = seekWithRangeRequest;
 
 function initializeApp() {
     // Get Telegram user ID
@@ -460,6 +571,15 @@ function initializeAudioPlayer() {
     audioPlayer.addEventListener('loadedmetadata', function() {
         // Update total time when metadata is loaded
         updateProgressBar();
+        
+        // Check seeking support
+        console.log('Audio metadata loaded:');
+        console.log(`- Duration: ${audioPlayer.duration}s`);
+        console.log(`- Seekable ranges: ${audioPlayer.seekable.length}`);
+        if (audioPlayer.seekable.length > 0) {
+            console.log(`- Seekable range: ${audioPlayer.seekable.start(0)}s - ${audioPlayer.seekable.end(0)}s`);
+        }
+        console.log(`- Ready state: ${audioPlayer.readyState}`);
     });
     
     audioPlayer.addEventListener('error', function(e) {

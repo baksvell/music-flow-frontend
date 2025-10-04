@@ -136,6 +136,11 @@
                         <div class="progress-fill" id="progressFill"></div>
                         <div class="progress-handle" id="progressHandle"></div>
                     </div>
+                    <div class="seek-methods" style="margin-top: 8px; font-size: 12px; color: #666;">
+                        <button onclick="document.getElementById('progressBar').onclick = seekToAlternative" style="margin-right: 8px; padding: 4px 8px; font-size: 10px;">Method 1</button>
+                        <button onclick="document.getElementById('progressBar').onclick = seekWithRangeRequest" style="margin-right: 8px; padding: 4px 8px; font-size: 10px;">Method 2</button>
+                        <button onclick="document.getElementById('progressBar').onclick = seekTo" style="padding: 4px 8px; font-size: 10px;">Method 3</button>
+                    </div>
                 </div>
             </div>
         </div>
