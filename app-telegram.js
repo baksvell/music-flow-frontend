@@ -760,10 +760,36 @@ function renderTracks() {
     const tracksHtml = allTracks.map((track, index) => createTrackHTML(track, index)).join('');
 
     tracksContainer.innerHTML = tracksHtml;
+    
+    // Update favorite status for all tracks after rendering
+    updateFavoriteStatuses();
+}
+
+async function updateFavoriteStatuses() {
+    if (!telegramUserId) return;
+    
+    // Update favorite status for each track
+    for (const track of allTracks) {
+        try {
+            const isFav = await isFavorite(track.id);
+            const favoriteBtn = document.getElementById(`favorite-btn-${track.id}`);
+            if (favoriteBtn) {
+                if (isFav) {
+                    favoriteBtn.classList.add('active');
+                    favoriteBtn.title = 'Убрать из избранного';
+                } else {
+                    favoriteBtn.classList.remove('active');
+                    favoriteBtn.title = 'Добавить в избранное';
+                }
+            }
+        } catch (error) {
+            console.error(`Error updating favorite status for track ${track.id}:`, error);
+        }
+    }
 }
 
 function createTrackHTML(track, index) {
-    const isFav = isFavorite(track.id);
+    // For now, we'll show the star as inactive and update it after checking the API
     // Find the actual index in allTracks array
     const actualIndex = allTracks.findIndex(t => t.id === track.id);
     const playIndex = actualIndex !== -1 ? actualIndex : 0; // Fallback to 0 if not found
@@ -778,7 +804,7 @@ function createTrackHTML(track, index) {
                     ${track.play_count > 0 ? `<span class="play-count">${track.play_count} прослушиваний</span>` : ''}
                 </div>
             </div>
-            <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${track.id}, event)" title="${isFav ? 'Убрать из избранного' : 'Добавить в избранное'}">
+            <button class="favorite-btn" id="favorite-btn-${track.id}" onclick="toggleFavorite(${track.id}, event)" title="Добавить в избранное">
                 <i class="fas fa-star"></i>
             </button>
             <div class="track-actions">
@@ -1132,54 +1158,70 @@ function showProfile() {
 // ===== FAVORITES FUNCTIONALITY =====
 
 function loadFavoritesFromStorage() {
-    try {
-        const stored = localStorage.getItem('musicFlow_favorites');
-        if (stored) {
-            favoriteTracks = JSON.parse(stored);
-            console.log('Loaded favorites:', favoriteTracks);
-        }
-    } catch (error) {
-        console.error('Error loading favorites:', error);
-        favoriteTracks = [];
-    }
+    // No longer using localStorage - using backend API with Telegram ID
+    console.log('Favorites now stored on backend with Telegram ID:', telegramUserId);
 }
 
 function saveFavoritesToStorage() {
-    try {
-        localStorage.setItem('musicFlow_favorites', JSON.stringify(favoriteTracks));
-        console.log('Saved favorites:', favoriteTracks);
-    } catch (error) {
-        console.error('Error saving favorites:', error);
-    }
+    // No longer using localStorage - using backend API with Telegram ID
+    console.log('Favorites now stored on backend with Telegram ID:', telegramUserId);
 }
 
-function toggleFavorite(trackId, event) {
+async function toggleFavorite(trackId, event) {
     event.stopPropagation(); // Prevent track play
     
-    const index = favoriteTracks.indexOf(trackId);
-    if (index > -1) {
-        // Remove from favorites
-        favoriteTracks.splice(index, 1);
-        console.log('Removed from favorites:', trackId);
-    } else {
-        // Add to favorites
-        favoriteTracks.push(trackId);
-        console.log('Added to favorites:', trackId);
+    if (!telegramUserId) {
+        console.error('Telegram User ID not available');
+        return;
     }
     
-    saveFavoritesToStorage();
-    renderTracks(); // Refresh display
-    updateFavoritesButton();
-    
-    // Send to bot
-    sendDataToBot('favorite_toggled', {
-        track_id: trackId,
-        is_favorite: favoriteTracks.includes(trackId)
-    });
+    try {
+        // Call backend API to toggle favorite
+        const response = await fetch(`${API_ENDPOINTS[0]}/favorites/${telegramUserId}/${trackId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Favorite toggle result:', result);
+        
+        // Update UI
+        renderTracks(); // Refresh display
+        updateFavoritesButton();
+        
+        // Send to bot
+        sendDataToBot('favorite_toggled', {
+            track_id: trackId,
+            is_favorite: result.action === 'added'
+        });
+        
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+    }
 }
 
-function isFavorite(trackId) {
-    return favoriteTracks.includes(trackId);
+async function isFavorite(trackId) {
+    if (!telegramUserId) {
+        return false;
+    }
+    
+    try {
+        const response = await fetch(`${API_ENDPOINTS[0]}/favorites/${telegramUserId}/check/${trackId}`);
+        if (!response.ok) {
+            return false;
+        }
+        const result = await response.json();
+        return result.is_favorite;
+    } catch (error) {
+        console.error('Error checking favorite status:', error);
+        return false;
+    }
 }
 
 function showFavorites() {
@@ -1187,37 +1229,55 @@ function showFavorites() {
     loadFavorites();
 }
 
-function loadFavorites() {
+async function loadFavorites() {
     const favoritesContainer = document.getElementById('favoritesContainer');
     if (!favoritesContainer) return;
     
-    if (favoriteTracks.length === 0) {
+    if (!telegramUserId) {
         favoritesContainer.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-star" style="font-size: 48px; color: var(--tg-theme-hint-color, #999); margin-bottom: 16px;"></i>
-                <h3>Нет избранных треков</h3>
-                <p>Добавьте треки в избранное, нажав на звездочку</p>
+                <h3>Не удалось загрузить избранное</h3>
+                <p>Telegram User ID не найден</p>
             </div>
         `;
         return;
     }
     
-    // Filter tracks to show only favorites
-    const favoriteTracksList = allTracks.filter(track => isFavorite(track.id));
-    
-    if (favoriteTracksList.length === 0) {
+    try {
+        // Get favorites from backend API
+        const response = await fetch(`${API_ENDPOINTS[0]}/favorites/${telegramUserId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        const favoriteTracksList = result.tracks;
+        
+        if (favoriteTracksList.length === 0) {
+            favoritesContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-star" style="font-size: 48px; color: var(--tg-theme-hint-color, #999); margin-bottom: 16px;"></i>
+                    <h3>Нет избранных треков</h3>
+                    <p>Добавьте треки в избранное, нажав на звездочку</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Render favorite tracks
+        favoritesContainer.innerHTML = favoriteTracksList.map(track => createTrackHTML(track)).join('');
+        
+    } catch (error) {
+        console.error('Error loading favorites:', error);
         favoritesContainer.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-star" style="font-size: 48px; color: var(--tg-theme-hint-color, #999); margin-bottom: 16px;"></i>
-                <h3>Избранные треки не найдены</h3>
-                <p>Возможно, треки были удалены из библиотеки</p>
+                <h3>Ошибка загрузки избранного</h3>
+                <p>Попробуйте позже</p>
             </div>
         `;
-        return;
     }
-    
-    // Render favorite tracks
-    favoritesContainer.innerHTML = favoriteTracksList.map(track => createTrackHTML(track)).join('');
 }
 
 function updateFavoritesButton() {
