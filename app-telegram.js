@@ -1177,7 +1177,7 @@ async function toggleFavorite(trackId, event) {
     
     try {
         // Call backend API to toggle favorite
-        const response = await fetch(`${API_ENDPOINTS[0]}/favorites/${telegramUserId}/${trackId}`, {
+        const response = await fetch(`https://mysicflow.onrender.com/favorites/${telegramUserId}/${trackId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1212,7 +1212,7 @@ async function isFavorite(trackId) {
     }
     
     try {
-        const response = await fetch(`${API_ENDPOINTS[0]}/favorites/${telegramUserId}/check/${trackId}`);
+        const response = await fetch(`https://mysicflow.onrender.com/favorites/${telegramUserId}/check/${trackId}`);
         if (!response.ok) {
             return false;
         }
@@ -1246,7 +1246,7 @@ async function loadFavorites() {
     
     try {
         // Get favorites from backend API
-        const response = await fetch(`${API_ENDPOINTS[0]}/favorites/${telegramUserId}`);
+        const response = await fetch(`https://mysicflow.onrender.com/favorites/${telegramUserId}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
