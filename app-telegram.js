@@ -324,8 +324,12 @@ function renderTracks() {
 
 function createTrackHTML(track, index) {
     const isFav = isFavorite(track.id);
+    // Find the actual index in allTracks array
+    const actualIndex = allTracks.findIndex(t => t.id === track.id);
+    const playIndex = actualIndex !== -1 ? actualIndex : 0; // Fallback to 0 if not found
+    
     return `
-        <div class="track-item" onclick="playTrack(${index})">
+        <div class="track-item" onclick="playTrack(${playIndex})">
             <div class="track-info">
                 <div class="track-title">${escapeHtml(track.title || track.name || 'Без названия')}</div>
                 <div class="track-artist">${escapeHtml(track.artist || track.performer || 'Неизвестный исполнитель')}</div>
@@ -338,7 +342,7 @@ function createTrackHTML(track, index) {
                 <i class="fas fa-star"></i>
             </button>
             <div class="track-actions">
-                <button class="play-btn" onclick="event.stopPropagation(); playTrack(${index})">
+                <button class="play-btn" onclick="event.stopPropagation(); playTrack(${playIndex})">
                     <i class="fas fa-play"></i>
                 </button>
             </div>
@@ -398,7 +402,12 @@ function handleSearch(event) {
 }
 
 function playTrack(index) {
-    if (index < 0 || index >= allTracks.length) return;
+    console.log('playTrack called with index:', index, 'allTracks.length:', allTracks.length);
+    
+    if (index < 0 || index >= allTracks.length) {
+        console.error('Invalid track index:', index);
+        return;
+    }
     
     // Prevent multiple play calls
     if (isPlayingTrack) {
@@ -408,6 +417,7 @@ function playTrack(index) {
     
     isPlayingTrack = true;
     currentTrack = allTracks[index];
+    console.log('Playing track:', currentTrack);
     
     // Get audio URL
     const audioUrl = getAudioUrl(currentTrack);
@@ -458,9 +468,14 @@ function playTrack(index) {
 }
 
 function getAudioUrl(track) {
+    // Check if track exists and has file_id
+    if (!track || !track.file_id) {
+        console.error('Track or file_id is missing:', track);
+        return null;
+    }
+    
     // Try different URL patterns
     const fileId = track.file_id;
-    if (!fileId) return null;
     
     // For demo tracks, use a test audio file
     if (fileId.startsWith('demo')) {
