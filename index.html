@@ -132,7 +132,7 @@
                         <span class="current-time" id="currentTime">0:00</span>
                         <span class="total-time" id="totalTime">0:00</span>
                     </div>
-                    <div class="progress-bar" id="progressBar" onclick="seekTo(event)">
+                    <div class="progress-bar" id="progressBar" onclick="seekTo(event)" ontouchstart="seekToTouch(event)" ontouchend="seekToTouch(event)">
                         <div class="progress-fill" id="progressFill"></div>
                         <div class="progress-handle" id="progressHandle"></div>
                     </div>

@@ -214,18 +214,54 @@ function stopProgressUpdates() {
 function seekTo(event) {
     if (!audioPlayer || !audioPlayer.duration) return;
     
+    // Prevent event bubbling to avoid triggering other click handlers
+    event.stopPropagation();
+    event.preventDefault();
+    
     const progressBar = document.getElementById('progressBar');
     const rect = progressBar.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
-    const percentage = clickX / rect.width;
+    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
     const newTime = percentage * audioPlayer.duration;
+    
+    console.log(`Seeking to: ${newTime.toFixed(2)}s (${(percentage * 100).toFixed(1)}%)`);
     
     audioPlayer.currentTime = newTime;
     updateProgressBar();
 }
 
+// Touch support for mobile devices
+function seekToTouch(event) {
+    if (!audioPlayer || !audioPlayer.duration) return;
+    
+    // Prevent event bubbling
+    event.stopPropagation();
+    event.preventDefault();
+    
+    const progressBar = document.getElementById('progressBar');
+    const rect = progressBar.getBoundingClientRect();
+    const touch = event.touches[0] || event.changedTouches[0];
+    const clickX = touch.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+    const newTime = percentage * audioPlayer.duration;
+    
+    console.log(`Touch seeking to: ${newTime.toFixed(2)}s (${(percentage * 100).toFixed(1)}%)`);
+    
+    // Add visual feedback
+    progressBar.classList.add('touching');
+    
+    audioPlayer.currentTime = newTime;
+    updateProgressBar();
+    
+    // Remove visual feedback after a short delay
+    setTimeout(() => {
+        progressBar.classList.remove('touching');
+    }, 200);
+}
+
 // Make functions globally available
 window.seekTo = seekTo;
+window.seekToTouch = seekToTouch;
 
 function initializeApp() {
     // Get Telegram user ID
