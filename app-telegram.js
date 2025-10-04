@@ -162,7 +162,10 @@ function formatTime(seconds) {
 }
 
 function updateProgressBar() {
-    if (!audioPlayer || isDragging) return;
+    if (!audioPlayer) {
+        console.log('updateProgressBar: No audioPlayer');
+        return;
+    }
     
     const currentTime = audioPlayer.currentTime || 0;
     const duration = audioPlayer.duration || 0;
@@ -176,10 +179,14 @@ function updateProgressBar() {
         
         if (progressFill) {
             progressFill.style.width = progress + '%';
+        } else {
+            console.log('updateProgressBar: progressFill element not found');
         }
         
         if (progressHandle) {
             progressHandle.style.left = progress + '%';
+        } else {
+            console.log('updateProgressBar: progressHandle element not found');
         }
         
         // Update time display
@@ -188,11 +195,22 @@ function updateProgressBar() {
         
         if (currentTimeEl) {
             currentTimeEl.textContent = formatTime(currentTime);
+        } else {
+            console.log('updateProgressBar: currentTime element not found');
         }
         
         if (totalTimeEl) {
             totalTimeEl.textContent = formatTime(duration);
+        } else {
+            console.log('updateProgressBar: totalTime element not found');
         }
+        
+        // Debug logging
+        if (Math.floor(currentTime) % 5 === 0) { // Log every 5 seconds
+            console.log(`Progress: ${progress.toFixed(1)}% (${formatTime(currentTime)}/${formatTime(duration)})`);
+        }
+    } else {
+        console.log('updateProgressBar: No duration available yet');
     }
 }
 
@@ -201,7 +219,9 @@ function startProgressUpdates() {
         clearInterval(progressUpdateInterval);
     }
     
-    progressUpdateInterval = setInterval(updateProgressBar, 100);
+    // Use timeupdate event instead of interval for better performance
+    // The timeupdate event is already handled in audioPlayer event listeners
+    console.log('Progress updates started via timeupdate event');
 }
 
 function stopProgressUpdates() {
@@ -345,6 +365,16 @@ function initializeAudioPlayer() {
         
         // Don't auto-play next track to prevent loops
         // playNext();
+    });
+    
+    audioPlayer.addEventListener('timeupdate', function() {
+        // Update progress bar during playback
+        updateProgressBar();
+    });
+    
+    audioPlayer.addEventListener('loadedmetadata', function() {
+        // Update total time when metadata is loaded
+        updateProgressBar();
     });
     
     audioPlayer.addEventListener('error', function(e) {
@@ -678,6 +708,9 @@ function playTrack(index) {
         updatePlayerDisplay();
         updatePlayButton();
         hideLoadingIndicator();
+        
+        // Initialize progress bar
+        updateProgressBar();
         
         // Preload next track
         preloadNextTrack(index);
