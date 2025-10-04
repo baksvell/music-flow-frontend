@@ -453,36 +453,9 @@ function setVolume(event) {
 }
 
 function setVolumeTouch(event) {
+    // Touch events removed - volume control is desktop-only now
     event.stopPropagation();
     event.preventDefault();
-    
-    const volumeSlider = document.getElementById('volumeSlider');
-    const rect = volumeSlider.getBoundingClientRect();
-    const touch = event.touches[0] || event.changedTouches[0];
-    const clickY = touch.clientY - rect.top;
-    const percentage = Math.max(0, Math.min(1, 1 - (clickY / rect.height))); // Invert Y axis
-    
-    console.log(`Touch event - Y: ${clickY}, Height: ${rect.height}, Percentage: ${(percentage * 100).toFixed(0)}%`);
-    
-    currentVolume = percentage;
-    updateVolumeDisplay();
-    updateAudioVolume();
-    
-    // Show visual feedback
-    showVolumeFeedback(`🔊 Громкость: ${(currentVolume * 100).toFixed(0)}%`);
-    
-    // Show handle on touch devices
-    const volumeHandle = document.getElementById('volumeHandle');
-    if (volumeHandle) {
-        volumeHandle.style.opacity = '1';
-        setTimeout(() => {
-            if (!isVolumeDragging) {
-                volumeHandle.style.opacity = '';
-            }
-        }, 1000);
-    }
-    
-    console.log(`Touch volume set to: ${(currentVolume * 100).toFixed(0)}%`);
 }
 
 function updateVolumeDisplay() {
@@ -612,21 +585,7 @@ function showVolumeFeedback(message) {
     }, 2000);
 }
 
-// Show detailed volume limitation info
-function showVolumeLimitationInfo() {
-    const message = `📱 Ограничение Telegram Mini App
-
-🔊 Управление громкостью ограничено браузером для безопасности.
-
-💡 Как настроить громкость:
-• Используйте кнопки громкости на устройстве
-• Настройте громкость в системных настройках
-• Ползунок показывает желаемый уровень
-
-✅ Все остальные функции работают нормально!`;
-
-    safeShowAlert(message);
-}
+// Volume limitation info function removed - volume control is now desktop-only
 
 // Volume dragging functions
 function startVolumeDrag(event) {
@@ -676,24 +635,9 @@ function handleVolumeDrag(event) {
 }
 
 function handleVolumeDragTouch(event) {
+    // Touch drag removed - volume control is desktop-only now
     if (!isVolumeDragging) return;
-    
     event.preventDefault();
-    
-    const volumeSlider = document.getElementById('volumeSlider');
-    const rect = volumeSlider.getBoundingClientRect();
-    const touch = event.touches[0];
-    const touchY = touch.clientY - rect.top;
-    const percentage = Math.max(0, Math.min(1, 1 - (touchY / rect.height))); // Invert Y axis
-    
-    console.log(`Touch drag - Y: ${touchY}, Height: ${rect.height}, Percentage: ${(percentage * 100).toFixed(0)}%`);
-    
-    currentVolume = percentage;
-    updateVolumeDisplay();
-    updateAudioVolume();
-    
-    // Show visual feedback
-    showVolumeFeedback(`🔊 Громкость: ${(currentVolume * 100).toFixed(0)}%`);
 }
 
 function stopVolumeDrag(event) {
@@ -719,7 +663,6 @@ window.setVolume = setVolume;
 window.setVolumeTouch = setVolumeTouch;
 window.toggleMute = toggleMute;
 window.startVolumeDrag = startVolumeDrag;
-window.showVolumeLimitationInfo = showVolumeLimitationInfo;
 
 function initializeApp() {
     // Get Telegram user ID

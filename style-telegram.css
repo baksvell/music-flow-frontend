@@ -723,75 +723,26 @@ body {
     color: var(--tg-theme-hint-color, #999999);
 }
 
-/* Volume limitation indicator */
-.volume-limitation-indicator {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    width: 16px;
-    height: 16px;
-    background: var(--tg-theme-button-color, #2481cc);
-    border-radius: 50%;
+/* Desktop/Mobile responsive volume control */
+.desktop-only {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: white;
-    opacity: 0.8;
-    cursor: help;
-    z-index: 10;
 }
 
-.volume-limitation-indicator:hover {
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-/* Mobile optimizations for volume control */
+/* Hide volume control on mobile devices */
 @media (max-width: 768px) {
-    .volume-slider {
-        width: 16px;
-        height: 70px;
-    }
-    
-    .volume-handle {
-        width: 20px;
-        height: 20px;
-        opacity: 0.8; /* Always visible on mobile */
-    }
-    
-    .volume-slider:hover .volume-handle {
-        opacity: 1;
-    }
-    
-    .volume-control {
-        gap: 8px;
-        margin-left: 12px;
-    }
-    
-    .volume-icon {
-        width: 28px;
-        height: 28px;
-        font-size: 16px;
+    .desktop-only {
+        display: none !important;
     }
 }
 
-/* Touch device optimizations */
+/* Hide volume control on touch devices */
 @media (hover: none) and (pointer: coarse) {
-    .volume-handle {
-        opacity: 0.7; /* Always visible on touch devices */
-    }
-    
-    .volume-slider {
-        width: 18px;
-        height: 75px;
-    }
-    
-    .volume-handle {
-        width: 22px;
-        height: 22px;
+    .desktop-only {
+        display: none !important;
     }
 }
+
+/* Volume control is now desktop-only, mobile styles removed */
 
 .control-btn {
     background: none;
