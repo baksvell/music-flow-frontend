@@ -1,4 +1,32 @@
-/* Music Flow - Telegram Optimized Styles */
+/* Music Flow - Dark Theme Styles */
+
+/* CSS Variables for Dark Theme */
+:root {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #3a3a3a;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --text-hint: #666666;
+    --accent-primary: #007aff;
+    --accent-secondary: #5856d6;
+    --border-color: #404040;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --success-color: #34c759;
+    --warning-color: #ff9500;
+    --error-color: #ff3b30;
+}
+
+/* Override Telegram theme variables for dark mode */
+body {
+    --tg-theme-bg-color: var(--bg-primary);
+    --tg-theme-secondary-bg-color: var(--bg-secondary);
+    --tg-theme-text-color: var(--text-primary);
+    --tg-theme-hint-color: var(--text-hint);
+    --tg-theme-link-color: var(--accent-primary);
+    --tg-theme-button-color: var(--accent-primary);
+    --tg-theme-button-text-color: var(--text-primary);
+}
 
 /* Loading Indicator Styles */
 .loading-indicator {
@@ -17,7 +45,7 @@
 }
 
 .loading-content {
-    background: var(--tg-theme-bg-color, #ffffff);
+    background: var(--bg-primary);
     border-radius: 16px;
     padding: 24px;
     text-align: center;
@@ -29,8 +57,8 @@
 .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid var(--tg-theme-hint-color, #e0e0e0);
-    border-top: 3px solid var(--tg-theme-button-color, #2481cc);
+    border: 3px solid var(--border-color);
+    border-top: 3px solid var(--accent-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 16px;
@@ -42,7 +70,7 @@
 }
 
 .loading-text {
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--text-primary);
     font-size: 16px;
     font-weight: 500;
     margin-bottom: 16px;
@@ -51,14 +79,14 @@
 .loading-progress {
     width: 100%;
     height: 4px;
-    background: var(--tg-theme-hint-color, #e0e0e0);
+    background: var(--border-color);
     border-radius: 2px;
     overflow: hidden;
 }
 
 .loading-bar {
     height: 100%;
-    background: var(--tg-theme-button-color, #2481cc);
+    background: var(--accent-primary);
     border-radius: 2px;
     width: 0%;
     transition: width 0.3s ease;
@@ -73,8 +101,8 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--tg-theme-bg-color, #ffffff);
-    color: var(--tg-theme-text-color, #000000);
+    background: var(--bg-primary);
+    color: var(--text-primary);
     overflow-x: hidden;
     line-height: 1.6;
     /* Telegram specific */
@@ -92,8 +120,8 @@ body {
 
 /* Header - Optimized for Telegram */
 .header {
-    background: var(--tg-theme-bg-color, #ffffff);
-    border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -119,14 +147,14 @@ body {
 .logo {
     font-size: 18px;
     font-weight: 700;
-    color: var(--tg-theme-button-color, #2481cc);
+    color: var(--accent-primary);
     margin: 0;
 }
 
 .favorites-btn {
     background: none;
     border: none;
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--text-primary);
     font-size: 18px;
     padding: 10px;
     border-radius: 8px;
@@ -137,7 +165,7 @@ body {
 }
 
 .favorites-btn:hover, .favorites-btn:active {
-    background: var(--tg-theme-hint-color, #f0f0f0);
+    background: var(--bg-tertiary);
     transform: scale(0.95);
 }
 
@@ -148,7 +176,7 @@ body {
 .back-btn {
     background: none;
     border: none;
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--text-primary);
     font-size: 18px;
     padding: 10px;
     border-radius: 8px;
@@ -159,14 +187,14 @@ body {
 }
 
 .back-btn:hover, .back-btn:active {
-    background: var(--tg-theme-hint-color, #f0f0f0);
+    background: var(--bg-tertiary);
     transform: scale(0.95);
 }
 
 .profile-btn {
     background: none;
     border: none;
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--text-primary);
     font-size: 18px;
     padding: 10px;
     border-radius: 8px;
@@ -177,12 +205,12 @@ body {
 }
 
 .profile-btn:hover, .profile-btn:active {
-    background: var(--tg-theme-hint-color, #f0f0f0);
+    background: var(--bg-tertiary);
     transform: scale(0.95);
 }
 
 .profile-btn.active {
-    color: var(--tg-theme-button-color, #2481cc);
+    color: var(--accent-primary);
 }
 
 /* Main Content - Telegram optimized */
@@ -214,11 +242,11 @@ body {
 .section-header h2 {
     font-size: 20px;
     font-weight: 600;
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--text-primary);
 }
 
 .refresh-btn {
-    background: var(--tg-theme-button-color, #2481cc);
+    background: var(--accent-primary);
     color: white;
     border: none;
     padding: 8px 12px;
@@ -241,14 +269,14 @@ body {
     align-items: center;
     justify-content: center;
     padding: 40px 20px;
-    color: var(--tg-theme-hint-color, #999999);
+    color: var(--text-secondary);
 }
 
 .spinner {
     width: 28px;
     height: 28px;
-    border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
-    border-top: 2px solid var(--tg-theme-button-color, #2481cc);
+    border: 2px solid var(--border-color);
+    border-top: 2px solid var(--accent-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 12px;
@@ -273,18 +301,18 @@ body {
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--tg-theme-hint-color, #999999);
+    color: var(--text-secondary);
     font-size: 16px;
 }
 
 .search-input {
     width: 100%;
     padding: 14px 14px 14px 44px;
-    border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
     font-size: 16px;
-    background: var(--tg-theme-bg-color, #ffffff);
-    color: var(--tg-theme-text-color, #000000);
+    background: var(--bg-primary);
+    color: var(--text-primary);
     transition: all 0.2s;
     /* Telegram specific */
     -webkit-appearance: none;
@@ -293,7 +321,7 @@ body {
 
 .search-input:focus {
     outline: none;
-    border-color: var(--tg-theme-button-color, #2481cc);
+    border-color: var(--accent-primary);
     box-shadow: 0 0 0 2px rgba(36, 129, 204, 0.1);
 }
 
@@ -308,12 +336,12 @@ body {
     display: flex;
     align-items: center;
     padding: 14px;
-    background: var(--tg-theme-bg-color, #ffffff);
-    border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px var(--shadow-color);
     /* Telegram specific */
     -webkit-tap-highlight-color: transparent;
     position: relative;
@@ -321,8 +349,8 @@ body {
 
 .track-item:hover, .track-item:active {
     transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    border-color: var(--tg-theme-button-color, #2481cc);
+    box-shadow: 0 2px 6px var(--shadow-color);
+    border-color: var(--accent-primary);
 }
 
 .track-info {
@@ -333,7 +361,7 @@ body {
 .track-title {
     font-weight: 600;
     font-size: 15px;
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--text-primary);
     margin-bottom: 3px;
     white-space: nowrap;
     overflow: hidden;
@@ -342,7 +370,7 @@ body {
 
 .track-artist {
     font-size: 13px;
-    color: var(--tg-theme-hint-color, #999999);
+    color: var(--text-secondary);
     margin-bottom: 6px;
     white-space: nowrap;
     overflow: hidden;
@@ -353,11 +381,11 @@ body {
     display: flex;
     gap: 10px;
     font-size: 11px;
-    color: var(--tg-theme-hint-color, #999999);
+    color: var(--text-secondary);
 }
 
 .play-count {
-    color: var(--tg-theme-button-color, #2481cc);
+    color: var(--accent-primary);
 }
 
 .track-actions {
@@ -367,7 +395,7 @@ body {
 }
 
 .play-btn {
-    background: var(--tg-theme-button-color, #2481cc);
+    background: var(--accent-primary);
     color: white;
     border: none;
     font-size: 14px;
@@ -428,7 +456,7 @@ body {
 .empty-state {
     text-align: center;
     padding: 50px 20px;
-    color: var(--tg-theme-hint-color, #999999);
+    color: var(--text-secondary);
 }
 
 .empty-state i {
@@ -440,7 +468,7 @@ body {
 .empty-state h3 {
     font-size: 18px;
     margin-bottom: 6px;
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--text-primary);
 }
 
 .empty-state p {
@@ -462,17 +490,17 @@ body {
 }
 
 .info-card {
-    background: var(--tg-theme-bg-color, #ffffff);
-    border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
     padding: 16px;
     text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px var(--shadow-color);
 }
 
 .info-card i {
     font-size: 28px;
-    color: var(--tg-theme-button-color, #2481cc);
+    color: var(--accent-primary);
     margin-bottom: 10px;
 }
 
@@ -480,12 +508,12 @@ body {
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 6px;
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--text-primary);
 }
 
 .info-card p {
     font-size: 13px;
-    color: var(--tg-theme-hint-color, #999999);
+    color: var(--text-secondary);
     line-height: 1.4;
 }
 
@@ -495,10 +523,10 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    background: var(--tg-theme-bg-color, #ffffff);
-    border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
     padding: 12px 16px;
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 -2px 8px var(--shadow-color);
     z-index: 100;
     /* Telegram specific */
     backdrop-filter: blur(10px);
@@ -527,7 +555,7 @@ body {
 .track-info .track-title {
     font-weight: 600;
     font-size: 14px;
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -536,7 +564,7 @@ body {
 
 .track-info .track-artist {
     font-size: 12px;
-    color: var(--tg-theme-hint-color, #999999);
+    color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -552,7 +580,7 @@ body {
     display: flex;
     justify-content: space-between;
     font-size: 12px;
-    color: var(--tg-theme-hint-color, #999999);
+    color: var(--text-secondary);
     margin-bottom: 4px;
 }
 
@@ -564,7 +592,7 @@ body {
     position: relative;
     width: 100%;
     height: 6px;
-    background: var(--tg-theme-hint-color, #e0e0e0);
+    background: var(--border-color);
     border-radius: 3px;
     cursor: pointer;
     transition: height 0.2s ease;
@@ -587,7 +615,7 @@ body {
     top: 0;
     left: 0;
     height: 100%;
-    background: var(--tg-theme-button-color, #2481cc);
+    background: var(--accent-primary);
     border-radius: 2px;
     transition: width 0.1s ease;
     width: 0%;
@@ -599,8 +627,8 @@ body {
     left: 0%;
     width: 14px;
     height: 14px;
-    background: var(--tg-theme-button-color, #2481cc);
-    border: 2px solid var(--tg-theme-bg-color, #ffffff);
+    background: var(--accent-primary);
+    border: 2px solid var(--bg-primary);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     cursor: pointer;
@@ -636,7 +664,7 @@ body {
 .control-btn {
     background: none;
     border: none;
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--text-primary);
     font-size: 16px;
     padding: 10px;
     border-radius: 50%;
@@ -652,12 +680,12 @@ body {
 }
 
 .control-btn:hover, .control-btn:active {
-    background: var(--tg-theme-hint-color, #f0f0f0);
+    background: var(--bg-tertiary);
     transform: scale(0.95);
 }
 
 .play-btn {
-    background: var(--tg-theme-button-color, #2481cc);
+    background: var(--accent-primary);
     color: white;
     font-size: 18px;
     width: 48px;
@@ -753,7 +781,7 @@ body {
 .favorite-btn {
     background: none;
     border: none;
-    color: var(--tg-theme-hint-color, #999999);
+    color: var(--text-secondary);
     font-size: 16px;
     padding: 8px;
     border-radius: 50%;
@@ -768,7 +796,7 @@ body {
 }
 
 .favorite-btn:hover, .favorite-btn:active {
-    background: var(--tg-theme-hint-color, #f0f0f0);
+    background: var(--bg-tertiary);
     transform: translateY(-50%) scale(0.95);
 }
 
@@ -784,7 +812,7 @@ body {
 .empty-state {
     text-align: center;
     padding: 40px 20px;
-    color: var(--tg-theme-hint-color, #999999);
+    color: var(--text-secondary);
 }
 
 .empty-state i {
@@ -796,7 +824,7 @@ body {
 .empty-state h3 {
     font-size: 18px;
     margin-bottom: 8px;
-    color: var(--tg-theme-text-color, #000000);
+    color: var(--text-primary);
 }
 
 .empty-state p {
