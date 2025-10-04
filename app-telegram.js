@@ -811,7 +811,7 @@ function createTrackHTML(track, index) {
     const playIndex = actualIndex !== -1 ? actualIndex : 0; // Fallback to 0 if not found
     
     return `
-        <div class="track-item" onclick="selectTrack(${playIndex})" data-track-id="${track.id}">
+        <div class="track-item">
             <div class="track-info">
                 <div class="track-title">${escapeHtml(track.title || track.name || 'Без названия')}</div>
                 <div class="track-artist">${escapeHtml(track.artist || track.performer || 'Неизвестный исполнитель')}</div>
@@ -820,10 +820,13 @@ function createTrackHTML(track, index) {
                     ${track.play_count > 0 ? `<span class="play-count">${track.play_count} прослушиваний</span>` : ''}
                 </div>
             </div>
-            <button class="favorite-btn" id="favorite-btn-${track.id}" onclick="toggleFavorite(${track.id}, event)" title="Добавить в избранное">
-                <i class="fas fa-star"></i>
-            </button>
             <div class="track-actions">
+                <button class="play-btn" onclick="event.stopPropagation(); playTrack(${playIndex})" title="Воспроизвести">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button class="favorite-btn" id="favorite-btn-${track.id}" onclick="toggleFavorite(${track.id}, event)" title="Добавить в избранное">
+                    <i class="fas fa-star"></i>
+                </button>
                 <button class="playlist-add-btn" onclick="event.stopPropagation(); addToPlaylist(track)" title="Добавить в плейлист">
                     <i class="fas fa-plus"></i>
                 </button>
@@ -883,38 +886,6 @@ function handleSearch(event) {
     }
 }
 
-function selectTrack(index) {
-    if (index < 0 || index >= allTracks.length) {
-        console.log('Invalid track index:', index);
-        return;
-    }
-    
-    const track = allTracks[index];
-    console.log('Selected track:', track.title, 'at index:', index);
-    
-    // Set current track
-    currentTrackIndex = index;
-    currentTrack = track;
-    
-    // Update player display
-    updatePlayerDisplay();
-    
-    // Update track selection visual
-    updateTrackSelection(index);
-}
-
-function updateTrackSelection(index) {
-    // Remove selection from all tracks
-    document.querySelectorAll('.track-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-    
-    // Add selection to current track
-    const trackItem = document.querySelector(`[data-track-id="${allTracks[index].id}"]`);
-    if (trackItem) {
-        trackItem.classList.add('selected');
-    }
-}
 
 function playTrack(index) {
     console.log('playTrack called with index:', index, 'allTracks.length:', allTracks.length);
@@ -1154,13 +1125,6 @@ function updatePlayerDisplay() {
         
         if (trackTitle) trackTitle.textContent = 'Выберите трек для воспроизведения';
         if (trackArtist) trackArtist.textContent = '';
-        
-        // Disable play button
-        const playBtn = document.getElementById('playBtn');
-        if (playBtn) {
-            playBtn.disabled = true;
-            playBtn.style.opacity = '0.5';
-        }
         return;
     }
     
@@ -1169,13 +1133,6 @@ function updatePlayerDisplay() {
     
     if (trackTitle) trackTitle.textContent = currentTrack.title || currentTrack.name || 'Без названия';
     if (trackArtist) trackArtist.textContent = currentTrack.artist || currentTrack.performer || 'Неизвестный исполнитель';
-    
-    // Enable play button
-    const playBtn = document.getElementById('playBtn');
-    if (playBtn) {
-        playBtn.disabled = false;
-        playBtn.style.opacity = '1';
-    }
     
     // Reset progress bar when switching tracks
     const progressFill = document.getElementById('progressFill');
