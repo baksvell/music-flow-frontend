@@ -37,9 +37,7 @@ let favoriteTracks = []; // Array of favorite track IDs
 let preloadedTracks = new Map(); // Cache for preloaded tracks
 let progressUpdateInterval = null; // Interval for updating progress
 let isDragging = false; // Track if user is dragging progress bar
-// Volume control variables
-let currentVolume = 0.7; // Default volume (70%)
-let isVolumeDragging = false; // Track if user is dragging volume slider
+// Volume control variables removed
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -431,162 +429,17 @@ function seekWithRangeRequest(event) {
     xhr.send();
 }
 
-// Volume control functions
-function setVolume(event) {
-    // Only handle click if not dragging
-    if (isVolumeDragging) return;
-    
-    event.stopPropagation();
-    event.preventDefault();
-    
-    const volumeBar = document.getElementById('volumeBar');
-    const rect = volumeBar.getBoundingClientRect();
-    const clickX = event.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-    
-    currentVolume = percentage;
-    updateVolumeDisplay();
-    updateAudioVolume();
-    
-    console.log(`Volume set to: ${(currentVolume * 100).toFixed(0)}%`);
-}
-
-function updateVolumeDisplay() {
-    const volumeFill = document.getElementById('volumeFill');
-    const volumeHandle = document.getElementById('volumeHandle');
-    
-    if (volumeFill) {
-        volumeFill.style.width = (currentVolume * 100) + '%';
-    }
-    
-    if (volumeHandle) {
-        volumeHandle.style.left = (currentVolume * 100) + '%';
-    }
-}
-
-function updateAudioVolume() {
-    if (audioPlayer) {
-        audioPlayer.volume = currentVolume;
-        console.log(`Audio volume updated: ${(currentVolume * 100).toFixed(0)}%`);
-    }
-}
-
-function setVolumeTouch(event) {
-    event.stopPropagation();
-    event.preventDefault();
-    
-    const volumeBar = document.getElementById('volumeBar');
-    const rect = volumeBar.getBoundingClientRect();
-    const touch = event.touches[0] || event.changedTouches[0];
-    const clickX = touch.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-    
-    console.log(`Touch event - X: ${clickX}, Width: ${rect.width}, Percentage: ${(percentage * 100).toFixed(0)}%`);
-    
-    currentVolume = percentage;
-    updateVolumeDisplay();
-    updateAudioVolume();
-    
-    // Show handle on touch devices
-    const volumeHandle = document.getElementById('volumeHandle');
-    if (volumeHandle) {
-        volumeHandle.style.opacity = '1';
-        setTimeout(() => {
-            if (!isVolumeDragging) {
-                volumeHandle.style.opacity = '0.7';
-            }
-        }, 1000);
-    }
-    
-    console.log(`Touch volume set to: ${(currentVolume * 100).toFixed(0)}%`);
-}
+// Volume control functions removed
 
 // Volume feedback functions removed
 
-// Volume dragging functions
-function startVolumeDrag(event) {
-    event.stopPropagation();
-    event.preventDefault();
-    
-    isVolumeDragging = true;
-    
-    // Show handle during drag
-    const volumeHandle = document.getElementById('volumeHandle');
-    if (volumeHandle) {
-        volumeHandle.style.opacity = '1';
-    }
-    
-    // Add global event listeners for dragging (both mouse and touch)
-    document.addEventListener('mousemove', handleVolumeDrag);
-    document.addEventListener('mouseup', stopVolumeDrag);
-    document.addEventListener('touchmove', handleVolumeDragTouch, { passive: false });
-    document.addEventListener('touchend', stopVolumeDrag);
-    
-    // Handle initial drag position
-    if (event.type === 'touchstart') {
-        handleVolumeDragTouch(event);
-    } else {
-        handleVolumeDrag(event);
-    }
-    
-    console.log('Volume drag started');
-}
-
-function handleVolumeDrag(event) {
-    if (!isVolumeDragging) return;
-    
-    event.preventDefault();
-    
-    const volumeBar = document.getElementById('volumeBar');
-    const rect = volumeBar.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, mouseX / rect.width));
-    
-    currentVolume = percentage;
-    updateVolumeDisplay();
-    updateAudioVolume();
-}
-
-function handleVolumeDragTouch(event) {
-    if (!isVolumeDragging) return;
-    
-    event.preventDefault();
-    
-    const volumeBar = document.getElementById('volumeBar');
-    const rect = volumeBar.getBoundingClientRect();
-    const touch = event.touches[0];
-    const touchX = touch.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, touchX / rect.width));
-    
-    console.log(`Touch drag - X: ${touchX}, Width: ${rect.width}, Percentage: ${(percentage * 100).toFixed(0)}%`);
-    
-    currentVolume = percentage;
-    updateVolumeDisplay();
-    updateAudioVolume();
-}
-
-function stopVolumeDrag(event) {
-    if (!isVolumeDragging) return;
-    
-    isVolumeDragging = false;
-    
-    // Remove global event listeners (both mouse and touch)
-    document.removeEventListener('mousemove', handleVolumeDrag);
-    document.removeEventListener('mouseup', stopVolumeDrag);
-    document.removeEventListener('touchmove', handleVolumeDragTouch);
-    document.removeEventListener('touchend', stopVolumeDrag);
-    
-    console.log(`Volume drag ended: ${(currentVolume * 100).toFixed(0)}%`);
-}
+// Volume dragging functions removed
 
 // Make functions globally available
 window.seekTo = seekTo;
 window.seekToTouch = seekToTouch;
 window.seekToAlternative = seekToAlternative;
 window.seekWithRangeRequest = seekWithRangeRequest;
-window.setVolume = setVolume;
-window.setVolumeTouch = setVolumeTouch;
-window.startVolumeDrag = startVolumeDrag;
 
 function initializeApp() {
     // Get Telegram user ID
@@ -597,9 +450,6 @@ function initializeApp() {
     
     // Load favorites from localStorage
     loadFavoritesFromStorage();
-    
-    // Initialize volume control
-    updateVolumeDisplay();
     
     // Initialize audio player
     initializeAudioPlayer();
@@ -614,7 +464,6 @@ function initializeAudioPlayer() {
     // Create audio element
     audioPlayer = new Audio();
     audioPlayer.preload = 'metadata';
-    audioPlayer.volume = currentVolume; // Set initial volume
     
     // Add event listeners
     audioPlayer.addEventListener('loadstart', function() {
