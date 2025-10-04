@@ -1,8 +1,10 @@
-# Ignore development files
+# Ignore all development files
 app-simple.js
 app-v2.js
+app.js
 index-simple.html
 index-v2.html
+index-old.html
 style-simple.css
 style-v2.css
 style.css
