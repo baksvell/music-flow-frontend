@@ -246,32 +246,11 @@ function seekTo(event) {
     
     console.log(`Seeking to: ${newTime.toFixed(2)}s (${(percentage * 100).toFixed(1)}%)`);
     
-    // Set seeking flag to prevent unwanted events
-    isDragging = true;
-    
-    // Pause briefly to prevent conflicts
-    const wasPlaying = !audioPlayer.paused;
-    if (wasPlaying) {
-        audioPlayer.pause();
-    }
-    
-    // Set new time
+    // Simple seeking - now that server supports range requests
     audioPlayer.currentTime = newTime;
-    
-    // Resume playing if it was playing before
-    if (wasPlaying) {
-        setTimeout(() => {
-            audioPlayer.play().catch(e => console.log('Seek play error:', e));
-        }, 50);
-    }
     
     // Update progress bar immediately
     updateProgressBar();
-    
-    // Clear seeking flag after a short delay
-    setTimeout(() => {
-        isDragging = false;
-    }, 100);
 }
 
 // Touch support for mobile devices
@@ -294,32 +273,15 @@ function seekToTouch(event) {
     // Add visual feedback
     progressBar.classList.add('touching');
     
-    // Set seeking flag to prevent unwanted events
-    isDragging = true;
-    
-    // Pause briefly to prevent conflicts
-    const wasPlaying = !audioPlayer.paused;
-    if (wasPlaying) {
-        audioPlayer.pause();
-    }
-    
-    // Set new time
+    // Simple seeking - now that server supports range requests
     audioPlayer.currentTime = newTime;
-    
-    // Resume playing if it was playing before
-    if (wasPlaying) {
-        setTimeout(() => {
-            audioPlayer.play().catch(e => console.log('Touch seek play error:', e));
-        }, 50);
-    }
     
     // Update progress bar immediately
     updateProgressBar();
     
-    // Remove visual feedback and clear seeking flag
+    // Remove visual feedback
     setTimeout(() => {
         progressBar.classList.remove('touching');
-        isDragging = false;
     }, 200);
 }
 
