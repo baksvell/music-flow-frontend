@@ -748,9 +748,8 @@ async function searchTracks(query) {
 
         showLoading(true);
         
-        // Try search endpoints
+        // Try search endpoints (case-insensitive search)
         const searchEndpoints = [
-            `${API_ENDPOINTS[0]}/search?q=${encodeURIComponent(query)}`,
             `https://mysicflow.onrender.com/tracks/search?q=${encodeURIComponent(query)}`
         ];
         
