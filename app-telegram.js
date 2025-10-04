@@ -468,6 +468,9 @@ function setVolumeTouch(event) {
     updateVolumeDisplay();
     updateAudioVolume();
     
+    // Show visual feedback
+    showVolumeFeedback(`🔊 Громкость: ${(currentVolume * 100).toFixed(0)}%`);
+    
     // Show handle on touch devices
     const volumeHandle = document.getElementById('volumeHandle');
     if (volumeHandle) {
@@ -520,8 +523,24 @@ function updateVolumeDisplay() {
 function updateAudioVolume() {
     if (audioPlayer) {
         const newVolume = isMuted ? 0 : currentVolume;
+        const oldVolume = audioPlayer.volume;
         audioPlayer.volume = newVolume;
+        
         console.log(`Audio volume updated: ${(newVolume * 100).toFixed(0)}% (muted: ${isMuted})`);
+        
+        // Check if volume actually changed (Telegram Mini App limitation)
+        if (Math.abs(audioPlayer.volume - newVolume) > 0.01) {
+            console.warn(`Telegram Mini App volume limitation detected!`);
+            console.warn(`Requested: ${(newVolume * 100).toFixed(0)}%, Actual: ${(audioPlayer.volume * 100).toFixed(0)}%`);
+            
+            // Show user notification about limitation
+            if (!window.volumeWarningShown) {
+                window.volumeWarningShown = true;
+                setTimeout(() => {
+                    safeShowAlert('ℹ️ В Telegram Mini App управление громкостью может быть ограничено. Используйте системные настройки громкости устройства.');
+                }, 1000);
+            }
+        }
         
         // Force volume update on mobile devices
         if (audioPlayer.volume !== newVolume) {
@@ -552,6 +571,45 @@ function toggleMute() {
     
     updateVolumeDisplay();
     console.log(`Volume ${isMuted ? 'muted' : 'unmuted'}: ${(currentVolume * 100).toFixed(0)}%`);
+    
+    // Show visual feedback for mute/unmute
+    showVolumeFeedback(isMuted ? '🔇 Звук выключен' : `🔊 Громкость: ${(currentVolume * 100).toFixed(0)}%`);
+}
+
+// Visual feedback for volume changes
+function showVolumeFeedback(message) {
+    // Create or update volume feedback element
+    let feedback = document.getElementById('volumeFeedback');
+    if (!feedback) {
+        feedback = document.createElement('div');
+        feedback.id = 'volumeFeedback';
+        feedback.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            font-size: 16px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        `;
+        document.body.appendChild(feedback);
+    }
+    
+    feedback.textContent = message;
+    feedback.style.opacity = '1';
+    
+    // Hide after 2 seconds
+    setTimeout(() => {
+        feedback.style.opacity = '0';
+    }, 2000);
 }
 
 // Volume dragging functions
@@ -596,6 +654,9 @@ function handleVolumeDrag(event) {
     currentVolume = percentage;
     updateVolumeDisplay();
     updateAudioVolume();
+    
+    // Show visual feedback
+    showVolumeFeedback(`🔊 Громкость: ${(currentVolume * 100).toFixed(0)}%`);
 }
 
 function handleVolumeDragTouch(event) {
@@ -614,6 +675,9 @@ function handleVolumeDragTouch(event) {
     currentVolume = percentage;
     updateVolumeDisplay();
     updateAudioVolume();
+    
+    // Show visual feedback
+    showVolumeFeedback(`🔊 Громкость: ${(currentVolume * 100).toFixed(0)}%`);
 }
 
 function stopVolumeDrag(event) {

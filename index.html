@@ -124,7 +124,8 @@
                                  onclick="setVolume(event)" 
                                  onmousedown="startVolumeDrag(event)"
                                  ontouchstart="startVolumeDrag(event)" 
-                                 ontouchend="setVolumeTouch(event)">
+                                 ontouchend="setVolumeTouch(event)"
+                                 title="В Telegram Mini App управление громкостью может быть ограничено">
                                 <div class="volume-track">
                                     <div class="volume-fill" id="volumeFill"></div>
                                     <div class="volume-handle" id="volumeHandle" 
@@ -132,7 +133,7 @@
                                          ontouchstart="startVolumeDrag(event)"></div>
                                 </div>
                             </div>
-                            <div class="volume-icon" id="volumeIcon" onclick="toggleMute()">
+                            <div class="volume-icon" id="volumeIcon" onclick="toggleMute()" title="Mute/Unmute">
                                 <i class="fas fa-volume-up"></i>
                             </div>
                         </div>
