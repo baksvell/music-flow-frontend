@@ -424,8 +424,9 @@ body {
 
 .track-actions {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
+    margin-left: 8px;
 }
 
 .play-btn {
@@ -810,9 +811,9 @@ body {
 
 .playlist-add-btn {
     background: var(--accent-primary);
-    border: none;
+    border: 1px solid var(--accent-primary);
     color: var(--text-primary);
-    font-size: 12px;
+    font-size: 14px;
     padding: 6px;
     border-radius: 50%;
     cursor: pointer;
@@ -820,8 +821,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -950,8 +951,8 @@ body {
 
 /* Favorite button styles */
 .favorite-btn {
-    background: none;
-    border: none;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     color: var(--text-secondary);
     font-size: 16px;
     padding: 8px;
@@ -959,9 +960,14 @@ body {
     cursor: pointer;
     transition: all 0.2s;
     position: absolute;
-    right: 50px;
+    right: 60px;
     top: 50%;
     transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     /* Telegram specific */
     -webkit-tap-highlight-color: transparent;
 }

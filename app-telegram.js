@@ -47,7 +47,7 @@ let originalTrackOrder = []; // Original track order for shuffle
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
+    initializeApp().catch(console.error);
     setupEventListeners();
     loadTracks();
     sendDataToBot('app_loaded', { timestamp: new Date().toISOString() });
@@ -451,15 +451,15 @@ window.toggleRepeat = toggleRepeat;
 window.showPlaylist = showPlaylist;
 window.clearPlaylist = clearPlaylist;
 
-function initializeApp() {
+async function initializeApp() {
     // Get Telegram user ID
     if (tg.initDataUnsafe?.user) {
         telegramUserId = tg.initDataUnsafe.user.id;
         console.log('Telegram User ID:', telegramUserId);
     }
     
-    // Load favorites from localStorage
-    loadFavoritesFromStorage();
+    // Load favorites from backend
+    await loadFavoritesFromStorage();
     
     // Initialize audio player
     initializeAudioPlayer();
@@ -821,9 +821,6 @@ function createTrackHTML(track, index) {
                 <i class="fas fa-star"></i>
             </button>
             <div class="track-actions">
-                <button class="play-btn" onclick="event.stopPropagation(); playTrack(${playIndex})" title="Воспроизвести">
-                    <i class="fas fa-play"></i>
-                </button>
                 <button class="playlist-add-btn" onclick="event.stopPropagation(); addToPlaylist(track)" title="Добавить в плейлист">
                     <i class="fas fa-plus"></i>
                 </button>
@@ -1173,9 +1170,27 @@ function showProfile() {
 
 // ===== FAVORITES FUNCTIONALITY =====
 
-function loadFavoritesFromStorage() {
-    // No longer using localStorage - using backend API with Telegram ID
-    console.log('Favorites now stored on backend with Telegram ID:', telegramUserId);
+async function loadFavoritesFromStorage() {
+    // Load favorites from backend API
+    if (!telegramUserId) {
+        console.log('Telegram User ID not available for loading favorites');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`https://mysicflow.onrender.com/favorites/${telegramUserId}`);
+        if (response.ok) {
+            const result = await response.json();
+            favoriteTracks = result.tracks.map(track => track.id);
+            console.log('Loaded favorites from backend:', favoriteTracks);
+        } else {
+            console.log('Failed to load favorites from backend');
+            favoriteTracks = [];
+        }
+    } catch (error) {
+        console.error('Error loading favorites from backend:', error);
+        favoriteTracks = [];
+    }
 }
 
 function saveFavoritesToStorage() {
