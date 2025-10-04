@@ -33,6 +33,7 @@ let popupOpen = false;
 let isPlayingTrack = false; // Prevent multiple play calls
 let lastClickTime = 0; // Prevent rapid clicks
 let lastTrackSwitchTime = 0; // Prevent rapid track switches
+let favoriteTracks = []; // Array of favorite track IDs
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -48,6 +49,9 @@ function initializeApp() {
         telegramUserId = tg.initDataUnsafe.user.id;
         console.log('Telegram User ID:', telegramUserId);
     }
+    
+    // Load favorites from localStorage
+    loadFavoritesFromStorage();
     
     // Initialize audio player
     initializeAudioPlayer();
@@ -313,7 +317,14 @@ function renderTracks() {
         return;
     }
 
-    const tracksHtml = allTracks.map((track, index) => `
+    const tracksHtml = allTracks.map((track, index) => createTrackHTML(track, index)).join('');
+
+    tracksContainer.innerHTML = tracksHtml;
+}
+
+function createTrackHTML(track, index) {
+    const isFav = isFavorite(track.id);
+    return `
         <div class="track-item" onclick="playTrack(${index})">
             <div class="track-info">
                 <div class="track-title">${escapeHtml(track.title || track.name || 'Без названия')}</div>
@@ -323,15 +334,16 @@ function renderTracks() {
                     ${track.play_count > 0 ? `<span class="play-count">${track.play_count} прослушиваний</span>` : ''}
                 </div>
             </div>
+            <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${track.id}, event)" title="${isFav ? 'Убрать из избранного' : 'Добавить в избранное'}">
+                <i class="fas fa-star"></i>
+            </button>
             <div class="track-actions">
                 <button class="play-btn" onclick="event.stopPropagation(); playTrack(${index})">
                     <i class="fas fa-play"></i>
                 </button>
             </div>
         </div>
-    `).join('');
-
-    tracksContainer.innerHTML = tracksHtml;
+    `;
 }
 
 function showSampleDataWithMessage() {
@@ -623,10 +635,13 @@ function showSection(section) {
     }
     
     currentSection = section;
+    updateFavoritesButton();
     
     // Load section-specific data
     if (section === 'home') {
         loadTracks();
+    } else if (section === 'favorites') {
+        loadFavorites();
     }
 }
 
@@ -636,11 +651,116 @@ function showProfile() {
     showSection('profile');
 }
 
+// ===== FAVORITES FUNCTIONALITY =====
+
+function loadFavoritesFromStorage() {
+    try {
+        const stored = localStorage.getItem('musicFlow_favorites');
+        if (stored) {
+            favoriteTracks = JSON.parse(stored);
+            console.log('Loaded favorites:', favoriteTracks);
+        }
+    } catch (error) {
+        console.error('Error loading favorites:', error);
+        favoriteTracks = [];
+    }
+}
+
+function saveFavoritesToStorage() {
+    try {
+        localStorage.setItem('musicFlow_favorites', JSON.stringify(favoriteTracks));
+        console.log('Saved favorites:', favoriteTracks);
+    } catch (error) {
+        console.error('Error saving favorites:', error);
+    }
+}
+
+function toggleFavorite(trackId, event) {
+    event.stopPropagation(); // Prevent track play
+    
+    const index = favoriteTracks.indexOf(trackId);
+    if (index > -1) {
+        // Remove from favorites
+        favoriteTracks.splice(index, 1);
+        console.log('Removed from favorites:', trackId);
+    } else {
+        // Add to favorites
+        favoriteTracks.push(trackId);
+        console.log('Added to favorites:', trackId);
+    }
+    
+    saveFavoritesToStorage();
+    renderTracks(); // Refresh display
+    updateFavoritesButton();
+    
+    // Send to bot
+    sendDataToBot('favorite_toggled', {
+        track_id: trackId,
+        is_favorite: favoriteTracks.includes(trackId)
+    });
+}
+
+function isFavorite(trackId) {
+    return favoriteTracks.includes(trackId);
+}
+
+function showFavorites() {
+    showSection('favorites');
+    loadFavorites();
+}
+
+function loadFavorites() {
+    const favoritesContainer = document.getElementById('favoritesContainer');
+    if (!favoritesContainer) return;
+    
+    if (favoriteTracks.length === 0) {
+        favoritesContainer.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-star" style="font-size: 48px; color: var(--tg-theme-hint-color, #999); margin-bottom: 16px;"></i>
+                <h3>Нет избранных треков</h3>
+                <p>Добавьте треки в избранное, нажав на звездочку</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Filter tracks to show only favorites
+    const favoriteTracksList = allTracks.filter(track => isFavorite(track.id));
+    
+    if (favoriteTracksList.length === 0) {
+        favoritesContainer.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-star" style="font-size: 48px; color: var(--tg-theme-hint-color, #999); margin-bottom: 16px;"></i>
+                <h3>Избранные треки не найдены</h3>
+                <p>Возможно, треки были удалены из библиотеки</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Render favorite tracks
+    favoritesContainer.innerHTML = favoriteTracksList.map(track => createTrackHTML(track)).join('');
+}
+
+function updateFavoritesButton() {
+    const favoritesBtn = document.querySelector('.favorites-btn');
+    if (favoritesBtn) {
+        if (currentSection === 'favorites') {
+            favoritesBtn.classList.add('active');
+        } else {
+            favoritesBtn.classList.remove('active');
+        }
+    }
+}
+
 // Export functions for global access
 window.showSection = showSection;
 window.showProfile = showProfile;
+window.showFavorites = showFavorites;
 window.playTrack = playTrack;
 window.togglePlay = togglePlay;
 window.playPrevious = playPrevious;
 window.playNext = playNext;
 window.loadTracks = loadTracks;
+window.loadFavorites = loadFavorites;
+window.toggleFavorite = toggleFavorite;

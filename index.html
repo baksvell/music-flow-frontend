@@ -15,7 +15,9 @@
             <div class="header-content">
                 <h1 class="logo">🎵 MusicFlow</h1>
                 <div class="header-actions">
-                    <!-- Search is now integrated in the main section -->
+                    <button class="favorites-btn" onclick="showFavorites()">
+                        <i class="fas fa-star"></i>
+                    </button>
                 </div>
             </div>
         </header>
@@ -50,6 +52,19 @@
                 </div>
             </section>
 
+            <!-- Favorites Section -->
+            <section id="favoritesSection" class="section">
+                <div class="section-header">
+                    <h2>⭐ Избранное</h2>
+                    <button class="refresh-btn" onclick="loadFavorites()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                
+                <div id="favoritesContainer" class="tracks-container">
+                    <!-- Favorite tracks will be loaded here -->
+                </div>
+            </section>
 
             <!-- Profile Section -->
             <section id="profileSection" class="section">

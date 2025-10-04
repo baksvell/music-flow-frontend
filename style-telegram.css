@@ -53,7 +53,7 @@ body {
     margin: 0;
 }
 
-.search-btn {
+.favorites-btn {
     background: none;
     border: none;
     color: var(--tg-theme-text-color, #000000);
@@ -66,9 +66,13 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
-.search-btn:hover, .search-btn:active {
+.favorites-btn:hover, .favorites-btn:active {
     background: var(--tg-theme-hint-color, #f0f0f0);
     transform: scale(0.95);
+}
+
+.favorites-btn.active {
+    color: #ffd700; /* Gold color for active favorites */
 }
 
 /* Main Content - Telegram optimized */
@@ -202,6 +206,7 @@ body {
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     /* Telegram specific */
     -webkit-tap-highlight-color: transparent;
+    position: relative;
 }
 
 .track-item:hover, .track-item:active {
@@ -541,6 +546,61 @@ body {
 
 .control-btn:active {
     transform: scale(0.9);
+}
+
+/* Favorite button styles */
+.favorite-btn {
+    background: none;
+    border: none;
+    color: var(--tg-theme-hint-color, #999999);
+    font-size: 16px;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: absolute;
+    right: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    /* Telegram specific */
+    -webkit-tap-highlight-color: transparent;
+}
+
+.favorite-btn:hover, .favorite-btn:active {
+    background: var(--tg-theme-hint-color, #f0f0f0);
+    transform: translateY(-50%) scale(0.95);
+}
+
+.favorite-btn.active {
+    color: #ffd700; /* Gold color for active favorites */
+}
+
+.favorite-btn.active:hover {
+    color: #ffed4e; /* Lighter gold on hover */
+}
+
+/* Empty state styles */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--tg-theme-hint-color, #999999);
+}
+
+.empty-state i {
+    display: block;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: var(--tg-theme-text-color, #000000);
+}
+
+.empty-state p {
+    font-size: 14px;
+    line-height: 1.5;
 }
 
 
