@@ -28,6 +28,8 @@ let isShuffled = false;
 let isRepeated = false;
 let volume = 0.8;
 let telegramUserId = null;
+let isLoading = false;
+let loadingProgress = 0;
 
 // Sample data
 const playlists = {
