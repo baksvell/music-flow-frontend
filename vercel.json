@@ -1,9 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "echo 'Static site - no build needed'",
-  "outputDirectory": ".",
-  "installCommand": "echo 'No dependencies to install'",
-  "framework": null,
   "builds": [
     {
       "src": "**/*",
@@ -19,7 +15,5 @@
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ],
-  "functions": {},
-  "env": {}
+  ]
 }
