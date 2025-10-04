@@ -17,6 +17,43 @@
     --error-color: #ff3b30;
 }
 
+/* Telegram Mini App dark theme */
+body {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Hide default Telegram header if possible */
+.tg-viewport {
+    background: var(--bg-primary) !important;
+}
+
+/* Ensure full dark theme */
+html, body {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Hide system UI elements if possible */
+.tg-viewport {
+    background: var(--bg-primary) !important;
+}
+
+/* Telegram Mini App specific dark theme */
+.tg-app {
+    background: var(--bg-primary) !important;
+}
+
+/* Ensure no white flashes */
+* {
+    background-color: inherit;
+}
+
+/* Dark theme for all elements */
+.container, .section, .track-list, .header {
+    background: var(--bg-primary) !important;
+}
+
 /* Override Telegram theme variables for dark mode */
 body {
     --tg-theme-bg-color: var(--bg-primary);
@@ -559,7 +596,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
     border-top: 1px solid var(--border-color);
     padding: 12px 16px;
     box-shadow: 0 -2px 8px var(--shadow-color);

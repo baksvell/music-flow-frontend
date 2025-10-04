@@ -47,6 +47,40 @@ let originalTrackOrder = []; // Original track order for shuffle
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
+    // Configure Telegram Mini App for dark theme
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        
+        // Set dark theme
+        tg.setHeaderColor('#1a1a1a'); // Dark header
+        tg.setBackgroundColor('#1a1a1a'); // Dark background
+        
+        // Set theme parameters for dark mode
+        tg.themeParams = {
+            bg_color: '#1a1a1a',
+            text_color: '#ffffff',
+            hint_color: '#666666',
+            link_color: '#007aff',
+            button_color: '#007aff',
+            button_text_color: '#ffffff',
+            secondary_bg_color: '#2d2d2d'
+        };
+        
+        // Enable closing confirmation
+        tg.enableClosingConfirmation();
+        
+        // Expand the app to full height
+        tg.expand();
+        
+        // Set main button to dark theme
+        tg.MainButton.setParams({
+            color: '#007aff',
+            text_color: '#ffffff'
+        });
+        
+        console.log('Telegram Mini App configured for dark theme');
+    }
+    
     initializeApp().catch(console.error);
     setupEventListeners();
     loadTracks();
