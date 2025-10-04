@@ -37,10 +37,7 @@ let favoriteTracks = []; // Array of favorite track IDs
 let preloadedTracks = new Map(); // Cache for preloaded tracks
 let progressUpdateInterval = null; // Interval for updating progress
 let isDragging = false; // Track if user is dragging progress bar
-let currentVolume = 0.7; // Default volume (70%)
-let isMuted = false; // Track mute state
-let previousVolume = 0.7; // Store volume before muting
-let isVolumeDragging = false; // Track if user is dragging volume slider
+// Volume control variables removed
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -432,237 +429,17 @@ function seekWithRangeRequest(event) {
     xhr.send();
 }
 
-// Volume control functions
-function setVolume(event) {
-    // Only handle click if not dragging
-    if (isVolumeDragging) return;
-    
-    event.stopPropagation();
-    event.preventDefault();
-    
-    const volumeSlider = document.getElementById('volumeSlider');
-    const rect = volumeSlider.getBoundingClientRect();
-    const clickY = event.clientY - rect.top;
-    const percentage = Math.max(0, Math.min(1, 1 - (clickY / rect.height))); // Invert Y axis
-    
-    currentVolume = percentage;
-    updateVolumeDisplay();
-    updateAudioVolume();
-    
-    console.log(`Volume set to: ${(currentVolume * 100).toFixed(0)}%`);
-}
+// Volume control functions removed
 
-function setVolumeTouch(event) {
-    // Touch events removed - volume control is desktop-only now
-    event.stopPropagation();
-    event.preventDefault();
-}
+// Volume feedback functions removed
 
-function updateVolumeDisplay() {
-    const volumeFill = document.getElementById('volumeFill');
-    const volumeHandle = document.getElementById('volumeHandle');
-    const volumeIcon = document.getElementById('volumeIcon');
-    
-    console.log(`Updating volume display: ${(currentVolume * 100).toFixed(0)}%`);
-    
-    if (volumeFill) {
-        volumeFill.style.height = (currentVolume * 100) + '%';
-        console.log(`Volume fill height set to: ${volumeFill.style.height}`);
-    }
-    
-    if (volumeHandle) {
-        volumeHandle.style.bottom = (currentVolume * 100) + '%';
-        console.log(`Volume handle bottom set to: ${volumeHandle.style.bottom}`);
-    }
-    
-    if (volumeIcon) {
-        const icon = volumeIcon.querySelector('i');
-        if (icon) {
-            if (isMuted || currentVolume === 0) {
-                icon.className = 'fas fa-volume-mute';
-                volumeIcon.classList.add('muted');
-            } else if (currentVolume < 0.3) {
-                icon.className = 'fas fa-volume-down';
-                volumeIcon.classList.remove('muted');
-            } else {
-                icon.className = 'fas fa-volume-up';
-                volumeIcon.classList.remove('muted');
-            }
-            console.log(`Volume icon updated to: ${icon.className}`);
-        }
-    }
-}
-
-function updateAudioVolume() {
-    if (audioPlayer) {
-        const newVolume = isMuted ? 0 : currentVolume;
-        const oldVolume = audioPlayer.volume;
-        audioPlayer.volume = newVolume;
-        
-        console.log(`Audio volume updated: ${(newVolume * 100).toFixed(0)}% (muted: ${isMuted})`);
-        
-        // Check if volume actually changed (Telegram Mini App limitation)
-        if (Math.abs(audioPlayer.volume - newVolume) > 0.01) {
-            console.warn(`Telegram Mini App volume limitation detected!`);
-            console.warn(`Requested: ${(newVolume * 100).toFixed(0)}%, Actual: ${(audioPlayer.volume * 100).toFixed(0)}%`);
-            
-            // Show user notification about limitation
-            if (!window.volumeWarningShown) {
-                window.volumeWarningShown = true;
-                setTimeout(() => {
-                    safeShowAlert('ℹ️ В Telegram Mini App управление громкостью ограничено браузером.\n\n💡 Рекомендации:\n• Используйте кнопки громкости на устройстве\n• Настройте громкость в системных настройках\n• Ползунок показывает желаемый уровень громкости');
-                }, 1000);
-            }
-        }
-        
-        // Force volume update on mobile devices
-        if (audioPlayer.volume !== newVolume) {
-            console.warn(`Volume mismatch! Set: ${newVolume}, Actual: ${audioPlayer.volume}`);
-            // Try to force set volume again
-            setTimeout(() => {
-                audioPlayer.volume = newVolume;
-                console.log(`Volume force-updated to: ${audioPlayer.volume}`);
-            }, 10);
-        }
-    } else {
-        console.warn('Audio player not available for volume update');
-    }
-}
-
-function toggleMute() {
-    if (isMuted) {
-        // Unmute
-        isMuted = false;
-        currentVolume = previousVolume;
-        updateAudioVolume();
-    } else {
-        // Mute
-        isMuted = true;
-        previousVolume = currentVolume;
-        updateAudioVolume();
-    }
-    
-    updateVolumeDisplay();
-    console.log(`Volume ${isMuted ? 'muted' : 'unmuted'}: ${(currentVolume * 100).toFixed(0)}%`);
-    
-    // Show visual feedback for mute/unmute
-    showVolumeFeedback(isMuted ? '🔇 Звук выключен' : `🔊 Громкость: ${(currentVolume * 100).toFixed(0)}%`);
-}
-
-// Visual feedback for volume changes
-function showVolumeFeedback(message) {
-    // Create or update volume feedback element
-    let feedback = document.getElementById('volumeFeedback');
-    if (!feedback) {
-        feedback = document.createElement('div');
-        feedback.id = 'volumeFeedback';
-        feedback.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10000;
-            font-size: 16px;
-            font-weight: 500;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        `;
-        document.body.appendChild(feedback);
-    }
-    
-    feedback.textContent = message;
-    feedback.style.opacity = '1';
-    
-    // Hide after 2 seconds
-    setTimeout(() => {
-        feedback.style.opacity = '0';
-    }, 2000);
-}
-
-// Volume limitation info function removed - volume control is now desktop-only
-
-// Volume dragging functions
-function startVolumeDrag(event) {
-    event.stopPropagation();
-    event.preventDefault();
-    
-    isVolumeDragging = true;
-    
-    // Show handle during drag
-    const volumeHandle = document.getElementById('volumeHandle');
-    if (volumeHandle) {
-        volumeHandle.style.opacity = '1';
-    }
-    
-    // Add global event listeners for dragging (both mouse and touch)
-    document.addEventListener('mousemove', handleVolumeDrag);
-    document.addEventListener('mouseup', stopVolumeDrag);
-    document.addEventListener('touchmove', handleVolumeDragTouch, { passive: false });
-    document.addEventListener('touchend', stopVolumeDrag);
-    
-    // Handle initial drag position
-    if (event.type === 'touchstart') {
-        handleVolumeDragTouch(event);
-    } else {
-        handleVolumeDrag(event);
-    }
-    
-    console.log('Volume drag started');
-}
-
-function handleVolumeDrag(event) {
-    if (!isVolumeDragging) return;
-    
-    event.preventDefault();
-    
-    const volumeSlider = document.getElementById('volumeSlider');
-    const rect = volumeSlider.getBoundingClientRect();
-    const mouseY = event.clientY - rect.top;
-    const percentage = Math.max(0, Math.min(1, 1 - (mouseY / rect.height))); // Invert Y axis
-    
-    currentVolume = percentage;
-    updateVolumeDisplay();
-    updateAudioVolume();
-    
-    // Show visual feedback
-    showVolumeFeedback(`🔊 Громкость: ${(currentVolume * 100).toFixed(0)}%`);
-}
-
-function handleVolumeDragTouch(event) {
-    // Touch drag removed - volume control is desktop-only now
-    if (!isVolumeDragging) return;
-    event.preventDefault();
-}
-
-function stopVolumeDrag(event) {
-    if (!isVolumeDragging) return;
-    
-    isVolumeDragging = false;
-    
-    // Remove global event listeners (both mouse and touch)
-    document.removeEventListener('mousemove', handleVolumeDrag);
-    document.removeEventListener('mouseup', stopVolumeDrag);
-    document.removeEventListener('touchmove', handleVolumeDragTouch);
-    document.removeEventListener('touchend', stopVolumeDrag);
-    
-    console.log(`Volume drag ended: ${(currentVolume * 100).toFixed(0)}%`);
-}
+// Volume dragging functions removed
 
 // Make functions globally available
 window.seekTo = seekTo;
 window.seekToTouch = seekToTouch;
 window.seekToAlternative = seekToAlternative;
 window.seekWithRangeRequest = seekWithRangeRequest;
-window.setVolume = setVolume;
-window.setVolumeTouch = setVolumeTouch;
-window.toggleMute = toggleMute;
-window.startVolumeDrag = startVolumeDrag;
 
 function initializeApp() {
     // Get Telegram user ID
@@ -673,9 +450,6 @@ function initializeApp() {
     
     // Load favorites from localStorage
     loadFavoritesFromStorage();
-    
-    // Initialize volume control
-    updateVolumeDisplay();
     
     // Initialize audio player
     initializeAudioPlayer();
@@ -690,7 +464,6 @@ function initializeAudioPlayer() {
     // Create audio element
     audioPlayer = new Audio();
     audioPlayer.preload = 'metadata';
-    audioPlayer.volume = currentVolume; // Set initial volume
     
     // Add event listeners
     audioPlayer.addEventListener('loadstart', function() {
@@ -1103,9 +876,6 @@ function playTrack(index) {
     audioPlayer.src = audioUrl;
     audioPlayer.load();
     
-    // Set volume before playing
-    updateAudioVolume();
-    
     // Try to play
     audioPlayer.play().then(() => {
         console.log('Audio playing successfully');
@@ -1184,9 +954,6 @@ function togglePlay() {
         audioPlayer.pause();
         // Don't send event here, let the pause event handle it
     } else {
-        // Set volume before playing
-        updateAudioVolume();
-        
         audioPlayer.play().catch((error) => {
             console.error('Error playing audio:', error);
             safeShowAlert('Ошибка воспроизведения: ' + error.message);
