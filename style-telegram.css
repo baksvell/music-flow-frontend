@@ -678,10 +678,20 @@ body {
     border: 2px solid var(--tg-theme-bg-color, #ffffff);
     border-radius: 50%;
     transform: translate(-50%, 50%);
-    cursor: pointer;
+    cursor: grab;
     opacity: 0;
     transition: all 0.2s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.volume-handle:active {
+    cursor: grabbing;
+    transform: translate(-50%, 50%) scale(1.2);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
 .volume-slider:hover .volume-handle {

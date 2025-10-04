@@ -40,6 +40,7 @@ let isDragging = false; // Track if user is dragging progress bar
 let currentVolume = 0.7; // Default volume (70%)
 let isMuted = false; // Track mute state
 let previousVolume = 0.7; // Store volume before muting
+let isVolumeDragging = false; // Track if user is dragging volume slider
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -433,6 +434,9 @@ function seekWithRangeRequest(event) {
 
 // Volume control functions
 function setVolume(event) {
+    // Only handle click if not dragging
+    if (isVolumeDragging) return;
+    
     event.stopPropagation();
     event.preventDefault();
     
@@ -518,6 +522,56 @@ function toggleMute() {
     console.log(`Volume ${isMuted ? 'muted' : 'unmuted'}: ${(currentVolume * 100).toFixed(0)}%`);
 }
 
+// Volume dragging functions
+function startVolumeDrag(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    isVolumeDragging = true;
+    
+    // Show handle during drag
+    const volumeHandle = document.getElementById('volumeHandle');
+    if (volumeHandle) {
+        volumeHandle.style.opacity = '1';
+    }
+    
+    // Add global event listeners for dragging
+    document.addEventListener('mousemove', handleVolumeDrag);
+    document.addEventListener('mouseup', stopVolumeDrag);
+    
+    // Handle initial drag position
+    handleVolumeDrag(event);
+    
+    console.log('Volume drag started');
+}
+
+function handleVolumeDrag(event) {
+    if (!isVolumeDragging) return;
+    
+    event.preventDefault();
+    
+    const volumeSlider = document.getElementById('volumeSlider');
+    const rect = volumeSlider.getBoundingClientRect();
+    const mouseY = event.clientY - rect.top;
+    const percentage = Math.max(0, Math.min(1, 1 - (mouseY / rect.height))); // Invert Y axis
+    
+    currentVolume = percentage;
+    updateVolumeDisplay();
+    updateAudioVolume();
+}
+
+function stopVolumeDrag(event) {
+    if (!isVolumeDragging) return;
+    
+    isVolumeDragging = false;
+    
+    // Remove global event listeners
+    document.removeEventListener('mousemove', handleVolumeDrag);
+    document.removeEventListener('mouseup', stopVolumeDrag);
+    
+    console.log(`Volume drag ended: ${(currentVolume * 100).toFixed(0)}%`);
+}
+
 // Make functions globally available
 window.seekTo = seekTo;
 window.seekToTouch = seekToTouch;
@@ -526,6 +580,7 @@ window.seekWithRangeRequest = seekWithRangeRequest;
 window.setVolume = setVolume;
 window.setVolumeTouch = setVolumeTouch;
 window.toggleMute = toggleMute;
+window.startVolumeDrag = startVolumeDrag;
 
 function initializeApp() {
     // Get Telegram user ID
