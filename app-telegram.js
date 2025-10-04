@@ -651,6 +651,7 @@ function showSection(section) {
     
     currentSection = section;
     updateFavoritesButton();
+    updateBackButton();
     
     // Load section-specific data
     if (section === 'home') {
@@ -759,6 +760,8 @@ function loadFavorites() {
 
 function updateFavoritesButton() {
     const favoritesBtn = document.querySelector('.favorites-btn');
+    const profileBtn = document.querySelector('.profile-btn');
+    
     if (favoritesBtn) {
         if (currentSection === 'favorites') {
             favoritesBtn.classList.add('active');
@@ -766,12 +769,37 @@ function updateFavoritesButton() {
             favoritesBtn.classList.remove('active');
         }
     }
+    
+    if (profileBtn) {
+        if (currentSection === 'profile') {
+            profileBtn.classList.add('active');
+        } else {
+            profileBtn.classList.remove('active');
+        }
+    }
+}
+
+function updateBackButton() {
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) {
+        // Show back button only when not on home page
+        if (currentSection === 'home') {
+            backBtn.style.display = 'none';
+        } else {
+            backBtn.style.display = 'block';
+        }
+    }
+}
+
+function goBack() {
+    showSection('home');
 }
 
 // Export functions for global access
 window.showSection = showSection;
 window.showProfile = showProfile;
 window.showFavorites = showFavorites;
+window.goBack = goBack;
 window.playTrack = playTrack;
 window.togglePlay = togglePlay;
 window.playPrevious = playPrevious;

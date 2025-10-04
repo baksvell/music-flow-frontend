@@ -46,6 +46,12 @@ body {
     height: 56px;
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .logo {
     font-size: 18px;
     font-weight: 700;
@@ -73,6 +79,46 @@ body {
 
 .favorites-btn.active {
     color: #ffd700; /* Gold color for active favorites */
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: var(--tg-theme-text-color, #000000);
+    font-size: 18px;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    /* Telegram specific */
+    -webkit-tap-highlight-color: transparent;
+}
+
+.back-btn:hover, .back-btn:active {
+    background: var(--tg-theme-hint-color, #f0f0f0);
+    transform: scale(0.95);
+}
+
+.profile-btn {
+    background: none;
+    border: none;
+    color: var(--tg-theme-text-color, #000000);
+    font-size: 18px;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    /* Telegram specific */
+    -webkit-tap-highlight-color: transparent;
+}
+
+.profile-btn:hover, .profile-btn:active {
+    background: var(--tg-theme-hint-color, #f0f0f0);
+    transform: scale(0.95);
+}
+
+.profile-btn.active {
+    color: var(--tg-theme-button-color, #2481cc);
 }
 
 /* Main Content - Telegram optimized */
