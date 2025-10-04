@@ -471,6 +471,36 @@ function updateAudioVolume() {
     }
 }
 
+function setVolumeTouch(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    const volumeBar = document.getElementById('volumeBar');
+    const rect = volumeBar.getBoundingClientRect();
+    const touch = event.touches[0] || event.changedTouches[0];
+    const clickX = touch.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+    
+    console.log(`Touch event - X: ${clickX}, Width: ${rect.width}, Percentage: ${(percentage * 100).toFixed(0)}%`);
+    
+    currentVolume = percentage;
+    updateVolumeDisplay();
+    updateAudioVolume();
+    
+    // Show handle on touch devices
+    const volumeHandle = document.getElementById('volumeHandle');
+    if (volumeHandle) {
+        volumeHandle.style.opacity = '1';
+        setTimeout(() => {
+            if (!isVolumeDragging) {
+                volumeHandle.style.opacity = '0.7';
+            }
+        }, 1000);
+    }
+    
+    console.log(`Touch volume set to: ${(currentVolume * 100).toFixed(0)}%`);
+}
+
 // Volume feedback functions removed
 
 // Volume dragging functions
@@ -486,12 +516,18 @@ function startVolumeDrag(event) {
         volumeHandle.style.opacity = '1';
     }
     
-    // Add global event listeners for dragging
+    // Add global event listeners for dragging (both mouse and touch)
     document.addEventListener('mousemove', handleVolumeDrag);
     document.addEventListener('mouseup', stopVolumeDrag);
+    document.addEventListener('touchmove', handleVolumeDragTouch, { passive: false });
+    document.addEventListener('touchend', stopVolumeDrag);
     
     // Handle initial drag position
-    handleVolumeDrag(event);
+    if (event.type === 'touchstart') {
+        handleVolumeDragTouch(event);
+    } else {
+        handleVolumeDrag(event);
+    }
     
     console.log('Volume drag started');
 }
@@ -511,14 +547,34 @@ function handleVolumeDrag(event) {
     updateAudioVolume();
 }
 
+function handleVolumeDragTouch(event) {
+    if (!isVolumeDragging) return;
+    
+    event.preventDefault();
+    
+    const volumeBar = document.getElementById('volumeBar');
+    const rect = volumeBar.getBoundingClientRect();
+    const touch = event.touches[0];
+    const touchX = touch.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, touchX / rect.width));
+    
+    console.log(`Touch drag - X: ${touchX}, Width: ${rect.width}, Percentage: ${(percentage * 100).toFixed(0)}%`);
+    
+    currentVolume = percentage;
+    updateVolumeDisplay();
+    updateAudioVolume();
+}
+
 function stopVolumeDrag(event) {
     if (!isVolumeDragging) return;
     
     isVolumeDragging = false;
     
-    // Remove global event listeners
+    // Remove global event listeners (both mouse and touch)
     document.removeEventListener('mousemove', handleVolumeDrag);
     document.removeEventListener('mouseup', stopVolumeDrag);
+    document.removeEventListener('touchmove', handleVolumeDragTouch);
+    document.removeEventListener('touchend', stopVolumeDrag);
     
     console.log(`Volume drag ended: ${(currentVolume * 100).toFixed(0)}%`);
 }
@@ -529,6 +585,7 @@ window.seekToTouch = seekToTouch;
 window.seekToAlternative = seekToAlternative;
 window.seekWithRangeRequest = seekWithRangeRequest;
 window.setVolume = setVolume;
+window.setVolumeTouch = setVolumeTouch;
 window.startVolumeDrag = startVolumeDrag;
 
 function initializeApp() {
