@@ -903,6 +903,19 @@ function selectTrack(index) {
     updateTrackSelection(index);
 }
 
+function updateTrackSelection(index) {
+    // Remove selection from all tracks
+    document.querySelectorAll('.track-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    
+    // Add selection to current track
+    const trackItem = document.querySelector(`[data-track-id="${allTracks[index].id}"]`);
+    if (trackItem) {
+        trackItem.classList.add('selected');
+    }
+}
+
 function playTrack(index) {
     console.log('playTrack called with index:', index, 'allTracks.length:', allTracks.length);
     
@@ -1007,10 +1020,14 @@ function togglePlay() {
         return;
     }
     
-    // If no track is selected, try to play the current track
-    if (!currentTrackIndex && currentTrackIndex !== 0) {
-        console.log('No track index available');
-        return;
+    // If no track index is available, try to find it
+    if (currentTrackIndex === null || currentTrackIndex === undefined) {
+        const trackIndex = allTracks.findIndex(t => t.id === currentTrack.id);
+        if (trackIndex === -1) {
+            console.log('Track not found in allTracks');
+            return;
+        }
+        currentTrackIndex = trackIndex;
     }
     
     // Prevent rapid clicks (debounce)
