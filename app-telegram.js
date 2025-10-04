@@ -537,7 +537,7 @@ function updateAudioVolume() {
             if (!window.volumeWarningShown) {
                 window.volumeWarningShown = true;
                 setTimeout(() => {
-                    safeShowAlert('ℹ️ В Telegram Mini App управление громкостью может быть ограничено. Используйте системные настройки громкости устройства.');
+                    safeShowAlert('ℹ️ В Telegram Mini App управление громкостью ограничено браузером.\n\n💡 Рекомендации:\n• Используйте кнопки громкости на устройстве\n• Настройте громкость в системных настройках\n• Ползунок показывает желаемый уровень громкости');
                 }, 1000);
             }
         }
@@ -610,6 +610,22 @@ function showVolumeFeedback(message) {
     setTimeout(() => {
         feedback.style.opacity = '0';
     }, 2000);
+}
+
+// Show detailed volume limitation info
+function showVolumeLimitationInfo() {
+    const message = `📱 Ограничение Telegram Mini App
+
+🔊 Управление громкостью ограничено браузером для безопасности.
+
+💡 Как настроить громкость:
+• Используйте кнопки громкости на устройстве
+• Настройте громкость в системных настройках
+• Ползунок показывает желаемый уровень
+
+✅ Все остальные функции работают нормально!`;
+
+    safeShowAlert(message);
 }
 
 // Volume dragging functions
@@ -703,6 +719,7 @@ window.setVolume = setVolume;
 window.setVolumeTouch = setVolumeTouch;
 window.toggleMute = toggleMute;
 window.startVolumeDrag = startVolumeDrag;
+window.showVolumeLimitationInfo = showVolumeLimitationInfo;
 
 function initializeApp() {
     // Get Telegram user ID
