@@ -35,6 +35,8 @@ let lastClickTime = 0; // Prevent rapid clicks
 let lastTrackSwitchTime = 0; // Prevent rapid track switches
 let favoriteTracks = []; // Array of favorite track IDs
 let preloadedTracks = new Map(); // Cache for preloaded tracks
+let progressUpdateInterval = null; // Interval for updating progress
+let isDragging = false; // Track if user is dragging progress bar
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -152,6 +154,79 @@ function preloadNextTrack(currentIndex) {
     preloadAudio.load();
 }
 
+// Progress bar functions
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function updateProgressBar() {
+    if (!audioPlayer || isDragging) return;
+    
+    const currentTime = audioPlayer.currentTime || 0;
+    const duration = audioPlayer.duration || 0;
+    
+    if (duration > 0) {
+        const progress = (currentTime / duration) * 100;
+        
+        // Update progress fill
+        const progressFill = document.getElementById('progressFill');
+        const progressHandle = document.getElementById('progressHandle');
+        
+        if (progressFill) {
+            progressFill.style.width = progress + '%';
+        }
+        
+        if (progressHandle) {
+            progressHandle.style.left = progress + '%';
+        }
+        
+        // Update time display
+        const currentTimeEl = document.getElementById('currentTime');
+        const totalTimeEl = document.getElementById('totalTime');
+        
+        if (currentTimeEl) {
+            currentTimeEl.textContent = formatTime(currentTime);
+        }
+        
+        if (totalTimeEl) {
+            totalTimeEl.textContent = formatTime(duration);
+        }
+    }
+}
+
+function startProgressUpdates() {
+    if (progressUpdateInterval) {
+        clearInterval(progressUpdateInterval);
+    }
+    
+    progressUpdateInterval = setInterval(updateProgressBar, 100);
+}
+
+function stopProgressUpdates() {
+    if (progressUpdateInterval) {
+        clearInterval(progressUpdateInterval);
+        progressUpdateInterval = null;
+    }
+}
+
+function seekTo(event) {
+    if (!audioPlayer || !audioPlayer.duration) return;
+    
+    const progressBar = document.getElementById('progressBar');
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newTime = percentage * audioPlayer.duration;
+    
+    audioPlayer.currentTime = newTime;
+    updateProgressBar();
+}
+
+// Make functions globally available
+window.seekTo = seekTo;
+
 function initializeApp() {
     // Get Telegram user ID
     if (tg.initDataUnsafe?.user) {
@@ -191,6 +266,7 @@ function initializeAudioPlayer() {
         isPlaying = true;
         updatePlayButton();
         hideLoadingIndicator();
+        startProgressUpdates();
         
         // Send play event only once
         if (currentTrack) {
@@ -205,6 +281,7 @@ function initializeAudioPlayer() {
         console.log('Audio paused');
         isPlaying = false;
         updatePlayButton();
+        stopProgressUpdates();
         
         // Send pause event only once
         if (currentTrack) {
@@ -219,6 +296,17 @@ function initializeAudioPlayer() {
         console.log('Audio ended');
         isPlaying = false;
         updatePlayButton();
+        stopProgressUpdates();
+        
+        // Reset progress bar
+        const progressFill = document.getElementById('progressFill');
+        const progressHandle = document.getElementById('progressHandle');
+        const currentTimeEl = document.getElementById('currentTime');
+        
+        if (progressFill) progressFill.style.width = '0%';
+        if (progressHandle) progressHandle.style.left = '0%';
+        if (currentTimeEl) currentTimeEl.textContent = '0:00';
+        
         // Don't auto-play next track to prevent loops
         // playNext();
     });
@@ -735,6 +823,17 @@ function updatePlayerDisplay() {
     
     if (trackTitle) trackTitle.textContent = currentTrack.title || currentTrack.name || 'Без названия';
     if (trackArtist) trackArtist.textContent = currentTrack.artist || currentTrack.performer || 'Неизвестный исполнитель';
+    
+    // Reset progress bar when switching tracks
+    const progressFill = document.getElementById('progressFill');
+    const progressHandle = document.getElementById('progressHandle');
+    const currentTimeEl = document.getElementById('currentTime');
+    const totalTimeEl = document.getElementById('totalTime');
+    
+    if (progressFill) progressFill.style.width = '0%';
+    if (progressHandle) progressHandle.style.left = '0%';
+    if (currentTimeEl) currentTimeEl.textContent = '0:00';
+    if (totalTimeEl) totalTimeEl.textContent = '0:00';
 }
 
 function updatePlayButton() {
