@@ -1,5 +1,69 @@
 /* Music Flow - Telegram Optimized Styles */
 
+/* Loading Indicator Styles */
+.loading-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.loading-content {
+    background: var(--tg-theme-bg-color, #ffffff);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--tg-theme-hint-color, #e0e0e0);
+    border-top: 3px solid var(--tg-theme-button-color, #2481cc);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: var(--tg-theme-text-color, #000000);
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.loading-progress {
+    width: 100%;
+    height: 4px;
+    background: var(--tg-theme-hint-color, #e0e0e0);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.loading-bar {
+    height: 100%;
+    background: var(--tg-theme-button-color, #2481cc);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
 /* Reset and Base Styles */
 * {
     margin: 0;

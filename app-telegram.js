@@ -34,6 +34,7 @@ let isPlayingTrack = false; // Prevent multiple play calls
 let lastClickTime = 0; // Prevent rapid clicks
 let lastTrackSwitchTime = 0; // Prevent rapid track switches
 let favoriteTracks = []; // Array of favorite track IDs
+let preloadedTracks = new Map(); // Cache for preloaded tracks
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -42,6 +43,96 @@ document.addEventListener('DOMContentLoaded', function() {
     loadTracks();
     sendDataToBot('app_loaded', { timestamp: new Date().toISOString() });
 });
+
+// Loading indicator functions
+function showLoadingIndicator(message = 'Загрузка...') {
+    // Create or update loading indicator
+    let loadingDiv = document.getElementById('loadingIndicator');
+    if (!loadingDiv) {
+        loadingDiv = document.createElement('div');
+        loadingDiv.id = 'loadingIndicator';
+        loadingDiv.className = 'loading-indicator';
+        loadingDiv.innerHTML = `
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">${message}</div>
+                <div class="loading-progress">
+                    <div class="loading-bar"></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(loadingDiv);
+    } else {
+        loadingDiv.querySelector('.loading-text').textContent = message;
+    }
+    
+    loadingDiv.style.display = 'flex';
+    
+    // Animate progress bar
+    const progressBar = loadingDiv.querySelector('.loading-bar');
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
+        progressBar.style.width = progress + '%';
+    }, 200);
+    
+    // Store interval for cleanup
+    loadingDiv.interval = interval;
+}
+
+function hideLoadingIndicator() {
+    const loadingDiv = document.getElementById('loadingIndicator');
+    if (loadingDiv) {
+        // Clear interval
+        if (loadingDiv.interval) {
+            clearInterval(loadingDiv.interval);
+        }
+        
+        // Complete progress bar
+        const progressBar = loadingDiv.querySelector('.loading-bar');
+        if (progressBar) {
+            progressBar.style.width = '100%';
+        }
+        
+        // Hide after short delay
+        setTimeout(() => {
+            loadingDiv.style.display = 'none';
+        }, 300);
+    }
+}
+
+// Preload next track for faster playback
+function preloadNextTrack(currentIndex) {
+    const nextIndex = (currentIndex + 1) % allTracks.length;
+    const nextTrack = allTracks[nextIndex];
+    
+    if (!nextTrack || preloadedTracks.has(nextTrack.id)) {
+        return; // Already preloaded or no track
+    }
+    
+    const audioUrl = getAudioUrl(nextTrack);
+    if (!audioUrl) {
+        return;
+    }
+    
+    // Create hidden audio element for preloading
+    const preloadAudio = new Audio();
+    preloadAudio.preload = 'auto';
+    preloadAudio.src = audioUrl;
+    
+    preloadAudio.addEventListener('canplaythrough', function() {
+        console.log(`Preloaded track: ${nextTrack.title}`);
+        preloadedTracks.set(nextTrack.id, preloadAudio);
+    });
+    
+    preloadAudio.addEventListener('error', function() {
+        console.log(`Failed to preload track: ${nextTrack.title}`);
+    });
+    
+    // Start loading
+    preloadAudio.load();
+}
 
 function initializeApp() {
     // Get Telegram user ID
@@ -74,12 +165,14 @@ function initializeAudioPlayer() {
     
     audioPlayer.addEventListener('canplay', function() {
         console.log('Audio can play');
+        hideLoadingIndicator();
     });
     
     audioPlayer.addEventListener('play', function() {
         console.log('Audio started playing');
         isPlaying = true;
         updatePlayButton();
+        hideLoadingIndicator();
         
         // Send play event only once
         if (currentTrack) {
@@ -114,6 +207,7 @@ function initializeAudioPlayer() {
     
     audioPlayer.addEventListener('error', function(e) {
         console.error('Audio error:', e);
+        hideLoadingIndicator();
         // Don't show alert immediately, let playTrack handle it
     });
 }
@@ -419,9 +513,13 @@ function playTrack(index) {
     currentTrack = allTracks[index];
     console.log('Playing track:', currentTrack);
     
+    // Show loading indicator
+    showLoadingIndicator('Загрузка аудио...');
+    
     // Get audio URL
     const audioUrl = getAudioUrl(currentTrack);
     if (!audioUrl) {
+        hideLoadingIndicator();
         safeShowAlert('Аудио файл недоступен');
         isPlayingTrack = false;
         return;
@@ -437,6 +535,10 @@ function playTrack(index) {
         console.log('Audio playing successfully');
         updatePlayerDisplay();
         updatePlayButton();
+        hideLoadingIndicator();
+        
+        // Preload next track
+        preloadNextTrack(index);
         
         // Send to Telegram bot
         sendDataToBot('track_played', {
