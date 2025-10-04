@@ -157,10 +157,22 @@ async function incrementPlayCount(trackId) {
 }
 
 function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
     // Search functionality
     const searchInput = document.getElementById('searchInput');
+    console.log('searchInput found:', !!searchInput);
     if (searchInput) {
         searchInput.addEventListener('input', debounce(handleSearch, 300));
+        console.log('Added event listener to searchInput');
+    }
+    
+    // Home search functionality
+    const homeSearchInput = document.getElementById('homeSearchInput');
+    console.log('homeSearchInput found:', !!homeSearchInput);
+    if (homeSearchInput) {
+        homeSearchInput.addEventListener('input', debounce(handleSearch, 300));
+        console.log('Added event listener to homeSearchInput');
     }
 
     // Player controls
@@ -257,23 +269,29 @@ async function searchTracks(query) {
         // Try search endpoints
         const searchEndpoints = [
             `${API_ENDPOINTS[0]}/search?q=${encodeURIComponent(query)}`,
-            `${API_ENDPOINTS[1]}/search?q=${encodeURIComponent(query)}`,
-            `${API_ENDPOINTS[0]}?search=${encodeURIComponent(query)}`
+            `https://mysicflow.onrender.com/tracks/search?q=${encodeURIComponent(query)}`
         ];
         
         let found = false;
         for (const endpoint of searchEndpoints) {
             try {
+                console.log(`Trying search endpoint: ${endpoint}`);
                 const response = await fetch(endpoint);
+                console.log(`Search response status: ${response.status}`);
+                
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('Search response data:', data);
+                    
                     if (data.results || data.tracks || Array.isArray(data)) {
                         allTracks = data.results || data.tracks || data;
+                        console.log(`Found ${allTracks.length} tracks for query: ${query}`);
                         found = true;
                         break;
                     }
                 }
             } catch (error) {
+                console.error(`Search endpoint error: ${endpoint}`, error);
                 continue;
             }
         }
@@ -372,11 +390,15 @@ function filterLocalTracks(query) {
 // ===== EVENT HANDLERS =====
 
 function handleSearch(event) {
+    console.log('handleSearch called with:', event.target.value);
     searchQuery = event.target.value.trim();
+    console.log('Search query:', searchQuery);
     
     if (searchQuery) {
+        console.log('Calling searchTracks with:', searchQuery);
         searchTracks(searchQuery);
     } else {
+        console.log('Loading all tracks');
         loadTracks();
     }
 }
