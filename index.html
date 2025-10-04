@@ -117,6 +117,19 @@
                         <button class="control-btn" id="nextBtn" onclick="playNext()">
                             <i class="fas fa-step-forward"></i>
                         </button>
+                        
+                        <!-- Volume Control -->
+                        <div class="volume-control">
+                            <div class="volume-slider" id="volumeSlider" onclick="setVolume(event)" ontouchstart="setVolumeTouch(event)" ontouchend="setVolumeTouch(event)">
+                                <div class="volume-track">
+                                    <div class="volume-fill" id="volumeFill"></div>
+                                    <div class="volume-handle" id="volumeHandle"></div>
+                                </div>
+                            </div>
+                            <div class="volume-icon" id="volumeIcon" onclick="toggleMute()">
+                                <i class="fas fa-volume-up"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 

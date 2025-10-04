@@ -37,6 +37,9 @@ let favoriteTracks = []; // Array of favorite track IDs
 let preloadedTracks = new Map(); // Cache for preloaded tracks
 let progressUpdateInterval = null; // Interval for updating progress
 let isDragging = false; // Track if user is dragging progress bar
+let currentVolume = 0.7; // Default volume (70%)
+let isMuted = false; // Track mute state
+let previousVolume = 0.7; // Store volume before muting
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -428,11 +431,101 @@ function seekWithRangeRequest(event) {
     xhr.send();
 }
 
+// Volume control functions
+function setVolume(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    const volumeSlider = document.getElementById('volumeSlider');
+    const rect = volumeSlider.getBoundingClientRect();
+    const clickY = event.clientY - rect.top;
+    const percentage = Math.max(0, Math.min(1, 1 - (clickY / rect.height))); // Invert Y axis
+    
+    currentVolume = percentage;
+    updateVolumeDisplay();
+    updateAudioVolume();
+    
+    console.log(`Volume set to: ${(currentVolume * 100).toFixed(0)}%`);
+}
+
+function setVolumeTouch(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    const volumeSlider = document.getElementById('volumeSlider');
+    const rect = volumeSlider.getBoundingClientRect();
+    const touch = event.touches[0] || event.changedTouches[0];
+    const clickY = touch.clientY - rect.top;
+    const percentage = Math.max(0, Math.min(1, 1 - (clickY / rect.height))); // Invert Y axis
+    
+    currentVolume = percentage;
+    updateVolumeDisplay();
+    updateAudioVolume();
+    
+    console.log(`Touch volume set to: ${(currentVolume * 100).toFixed(0)}%`);
+}
+
+function updateVolumeDisplay() {
+    const volumeFill = document.getElementById('volumeFill');
+    const volumeHandle = document.getElementById('volumeHandle');
+    const volumeIcon = document.getElementById('volumeIcon');
+    
+    if (volumeFill) {
+        volumeFill.style.height = (currentVolume * 100) + '%';
+    }
+    
+    if (volumeHandle) {
+        volumeHandle.style.bottom = (currentVolume * 100) + '%';
+    }
+    
+    if (volumeIcon) {
+        const icon = volumeIcon.querySelector('i');
+        if (icon) {
+            if (isMuted || currentVolume === 0) {
+                icon.className = 'fas fa-volume-mute';
+                volumeIcon.classList.add('muted');
+            } else if (currentVolume < 0.3) {
+                icon.className = 'fas fa-volume-down';
+                volumeIcon.classList.remove('muted');
+            } else {
+                icon.className = 'fas fa-volume-up';
+                volumeIcon.classList.remove('muted');
+            }
+        }
+    }
+}
+
+function updateAudioVolume() {
+    if (audioPlayer) {
+        audioPlayer.volume = isMuted ? 0 : currentVolume;
+    }
+}
+
+function toggleMute() {
+    if (isMuted) {
+        // Unmute
+        isMuted = false;
+        currentVolume = previousVolume;
+        updateAudioVolume();
+    } else {
+        // Mute
+        isMuted = true;
+        previousVolume = currentVolume;
+        updateAudioVolume();
+    }
+    
+    updateVolumeDisplay();
+    console.log(`Volume ${isMuted ? 'muted' : 'unmuted'}: ${(currentVolume * 100).toFixed(0)}%`);
+}
+
 // Make functions globally available
 window.seekTo = seekTo;
 window.seekToTouch = seekToTouch;
 window.seekToAlternative = seekToAlternative;
 window.seekWithRangeRequest = seekWithRangeRequest;
+window.setVolume = setVolume;
+window.setVolumeTouch = setVolumeTouch;
+window.toggleMute = toggleMute;
 
 function initializeApp() {
     // Get Telegram user ID
@@ -443,6 +536,9 @@ function initializeApp() {
     
     // Load favorites from localStorage
     loadFavoritesFromStorage();
+    
+    // Initialize volume control
+    updateVolumeDisplay();
     
     // Initialize audio player
     initializeAudioPlayer();
@@ -457,6 +553,7 @@ function initializeAudioPlayer() {
     // Create audio element
     audioPlayer = new Audio();
     audioPlayer.preload = 'metadata';
+    audioPlayer.volume = currentVolume; // Set initial volume
     
     // Add event listeners
     audioPlayer.addEventListener('loadstart', function() {
