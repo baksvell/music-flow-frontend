@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', function() {
             secondary_bg_color: '#2d2d2d'
         };
         
-        // Enable closing confirmation
-        tg.enableClosingConfirmation();
+        // Disable closing confirmation to avoid exit dialog
+        // tg.enableClosingConfirmation();
         
         // Expand the app to full height
         tg.expand();
