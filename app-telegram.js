@@ -46,59 +46,77 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Loading indicator functions
 function showLoadingIndicator(message = 'Загрузка...') {
-    // Create or update loading indicator
-    let loadingDiv = document.getElementById('loadingIndicator');
-    if (!loadingDiv) {
-        loadingDiv = document.createElement('div');
-        loadingDiv.id = 'loadingIndicator';
-        loadingDiv.className = 'loading-indicator';
-        loadingDiv.innerHTML = `
-            <div class="loading-content">
-                <div class="loading-spinner"></div>
-                <div class="loading-text">${message}</div>
-                <div class="loading-progress">
-                    <div class="loading-bar"></div>
+    try {
+        // Create or update loading indicator
+        let loadingDiv = document.getElementById('loadingIndicator');
+        if (!loadingDiv) {
+            loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loadingIndicator';
+            loadingDiv.className = 'loading-indicator';
+            loadingDiv.innerHTML = `
+                <div class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">${message}</div>
+                    <div class="loading-progress">
+                        <div class="loading-bar"></div>
+                    </div>
                 </div>
-            </div>
-        `;
-        document.body.appendChild(loadingDiv);
-    } else {
-        loadingDiv.querySelector('.loading-text').textContent = message;
-    }
+            `;
+            document.body.appendChild(loadingDiv);
+        } else {
+            const loadingText = loadingDiv.querySelector('.loading-text');
+            if (loadingText) {
+                loadingText.textContent = message;
+            }
+        }
     
     loadingDiv.style.display = 'flex';
     
     // Animate progress bar
     const progressBar = loadingDiv.querySelector('.loading-bar');
-    let progress = 0;
-    const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) progress = 90;
-        progressBar.style.width = progress + '%';
-    }, 200);
+    if (progressBar) {
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+        }, 200);
+        
+        // Store interval for cleanup
+        loadingDiv.interval = interval;
+    }
     
-    // Store interval for cleanup
-    loadingDiv.interval = interval;
+    } catch (error) {
+        console.error('Error showing loading indicator:', error);
+        // Fallback: just log the message
+        console.log('Loading:', message);
+    }
 }
 
 function hideLoadingIndicator() {
-    const loadingDiv = document.getElementById('loadingIndicator');
-    if (loadingDiv) {
-        // Clear interval
-        if (loadingDiv.interval) {
-            clearInterval(loadingDiv.interval);
+    try {
+        const loadingDiv = document.getElementById('loadingIndicator');
+        if (loadingDiv) {
+            // Clear interval
+            if (loadingDiv.interval) {
+                clearInterval(loadingDiv.interval);
+            }
+            
+            // Complete progress bar
+            const progressBar = loadingDiv.querySelector('.loading-bar');
+            if (progressBar) {
+                progressBar.style.width = '100%';
+            }
+            
+            // Hide after short delay
+            setTimeout(() => {
+                if (loadingDiv) {
+                    loadingDiv.style.display = 'none';
+                }
+            }, 300);
         }
-        
-        // Complete progress bar
-        const progressBar = loadingDiv.querySelector('.loading-bar');
-        if (progressBar) {
-            progressBar.style.width = '100%';
-        }
-        
-        // Hide after short delay
-        setTimeout(() => {
-            loadingDiv.style.display = 'none';
-        }, 300);
+    } catch (error) {
+        console.error('Error hiding loading indicator:', error);
     }
 }
 
