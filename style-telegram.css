@@ -387,6 +387,18 @@ body {
     border-color: var(--accent-primary);
 }
 
+.track-item.selected {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+.track-item.selected .track-title,
+.track-item.selected .track-artist,
+.track-item.selected .track-duration {
+    color: var(--text-primary);
+}
+
 .track-info {
     flex: 1;
     min-width: 0;

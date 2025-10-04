@@ -467,6 +467,9 @@ async function initializeApp() {
     // Update statistics
     updatePlaylistStats();
     
+    // Initialize player display with no track selected
+    currentTrack = null;
+    currentTrackIndex = null;
     updatePlayerDisplay();
     showLoading(false);
 
@@ -808,7 +811,7 @@ function createTrackHTML(track, index) {
     const playIndex = actualIndex !== -1 ? actualIndex : 0; // Fallback to 0 if not found
     
     return `
-        <div class="track-item" onclick="playTrack(${playIndex})">
+        <div class="track-item" onclick="selectTrack(${playIndex})" data-track-id="${track.id}">
             <div class="track-info">
                 <div class="track-title">${escapeHtml(track.title || track.name || 'Без названия')}</div>
                 <div class="track-artist">${escapeHtml(track.artist || track.performer || 'Неизвестный исполнитель')}</div>
@@ -878,6 +881,26 @@ function handleSearch(event) {
         console.log('Loading all tracks');
         loadTracks();
     }
+}
+
+function selectTrack(index) {
+    if (index < 0 || index >= allTracks.length) {
+        console.log('Invalid track index:', index);
+        return;
+    }
+    
+    const track = allTracks[index];
+    console.log('Selected track:', track.title, 'at index:', index);
+    
+    // Set current track
+    currentTrackIndex = index;
+    currentTrack = track;
+    
+    // Update player display
+    updatePlayerDisplay();
+    
+    // Update track selection visual
+    updateTrackSelection(index);
 }
 
 function playTrack(index) {
@@ -979,7 +1002,16 @@ function getAudioUrl(track) {
 }
 
 function togglePlay() {
-    if (!currentTrack || !audioPlayer) return;
+    if (!currentTrack || !audioPlayer) {
+        console.log('No track selected or audio player not available');
+        return;
+    }
+    
+    // If no track is selected, try to play the current track
+    if (!currentTrackIndex && currentTrackIndex !== 0) {
+        console.log('No track index available');
+        return;
+    }
     
     // Prevent rapid clicks (debounce)
     const now = Date.now();
@@ -1098,13 +1130,35 @@ function showLoading(show) {
 }
 
 function updatePlayerDisplay() {
-    if (!currentTrack) return;
+    if (!currentTrack) {
+        // No track selected - show placeholder
+        const trackTitle = document.getElementById('currentTrackTitle');
+        const trackArtist = document.getElementById('currentTrackArtist');
+        
+        if (trackTitle) trackTitle.textContent = 'Выберите трек для воспроизведения';
+        if (trackArtist) trackArtist.textContent = '';
+        
+        // Disable play button
+        const playBtn = document.getElementById('playBtn');
+        if (playBtn) {
+            playBtn.disabled = true;
+            playBtn.style.opacity = '0.5';
+        }
+        return;
+    }
     
     const trackTitle = document.getElementById('currentTrackTitle');
     const trackArtist = document.getElementById('currentTrackArtist');
     
     if (trackTitle) trackTitle.textContent = currentTrack.title || currentTrack.name || 'Без названия';
     if (trackArtist) trackArtist.textContent = currentTrack.artist || currentTrack.performer || 'Неизвестный исполнитель';
+    
+    // Enable play button
+    const playBtn = document.getElementById('playBtn');
+    if (playBtn) {
+        playBtn.disabled = false;
+        playBtn.style.opacity = '1';
+    }
     
     // Reset progress bar when switching tracks
     const progressFill = document.getElementById('progressFill');
