@@ -740,12 +740,15 @@ async function loadTracks() {
 }
 
 async function searchTracks(query) {
+    console.log('searchTracks called with query:', query);
     try {
         if (!query.trim()) {
+            console.log('Empty query, loading all tracks');
             loadTracks();
             return;
         }
 
+        console.log('Starting search for:', query);
         showLoading(true);
         
         // Try search endpoints (case-insensitive search)
@@ -753,9 +756,12 @@ async function searchTracks(query) {
             `https://mysicflow.onrender.com/tracks/search?q=${encodeURIComponent(query)}`
         ];
         
+        console.log('Search endpoints:', searchEndpoints);
+        
         let found = false;
         for (const endpoint of searchEndpoints) {
             try {
+                console.log('Fetching from endpoint:', endpoint);
                 const response = await fetch(endpoint);
                 
                 if (response.ok) {
@@ -910,8 +916,10 @@ function filterLocalTracks(query) {
 
 function handleSearch(event) {
     searchQuery = event.target.value.trim();
+    console.log('handleSearch called with query:', searchQuery);
     
     if (searchQuery) {
+        console.log('Calling searchTracks with query:', searchQuery);
         searchTracks(searchQuery);
     } else {
         console.log('Loading all tracks');
