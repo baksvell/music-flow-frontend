@@ -246,8 +246,32 @@ function seekTo(event) {
     
     console.log(`Seeking to: ${newTime.toFixed(2)}s (${(percentage * 100).toFixed(1)}%)`);
     
+    // Set seeking flag to prevent unwanted events
+    isDragging = true;
+    
+    // Pause briefly to prevent conflicts
+    const wasPlaying = !audioPlayer.paused;
+    if (wasPlaying) {
+        audioPlayer.pause();
+    }
+    
+    // Set new time
     audioPlayer.currentTime = newTime;
+    
+    // Resume playing if it was playing before
+    if (wasPlaying) {
+        setTimeout(() => {
+            audioPlayer.play().catch(e => console.log('Seek play error:', e));
+        }, 50);
+    }
+    
+    // Update progress bar immediately
     updateProgressBar();
+    
+    // Clear seeking flag after a short delay
+    setTimeout(() => {
+        isDragging = false;
+    }, 100);
 }
 
 // Touch support for mobile devices
@@ -270,18 +294,72 @@ function seekToTouch(event) {
     // Add visual feedback
     progressBar.classList.add('touching');
     
+    // Set seeking flag to prevent unwanted events
+    isDragging = true;
+    
+    // Pause briefly to prevent conflicts
+    const wasPlaying = !audioPlayer.paused;
+    if (wasPlaying) {
+        audioPlayer.pause();
+    }
+    
+    // Set new time
     audioPlayer.currentTime = newTime;
+    
+    // Resume playing if it was playing before
+    if (wasPlaying) {
+        setTimeout(() => {
+            audioPlayer.play().catch(e => console.log('Touch seek play error:', e));
+        }, 50);
+    }
+    
+    // Update progress bar immediately
     updateProgressBar();
     
-    // Remove visual feedback after a short delay
+    // Remove visual feedback and clear seeking flag
     setTimeout(() => {
         progressBar.classList.remove('touching');
+        isDragging = false;
     }, 200);
+}
+
+// Alternative seeking method that doesn't trigger events
+function seekToAlternative(event) {
+    if (!audioPlayer || !audioPlayer.duration) return;
+    
+    event.stopPropagation();
+    event.preventDefault();
+    
+    const progressBar = document.getElementById('progressBar');
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+    const newTime = percentage * audioPlayer.duration;
+    
+    console.log(`Alternative seeking to: ${newTime.toFixed(2)}s (${(percentage * 100).toFixed(1)}%)`);
+    
+    // Use a more direct approach
+    try {
+        // Temporarily remove event listeners
+        const wasPlaying = !audioPlayer.paused;
+        
+        // Set time directly
+        audioPlayer.currentTime = newTime;
+        
+        // Force update progress bar
+        updateProgressBar();
+        
+        console.log(`Successfully seeked to: ${audioPlayer.currentTime.toFixed(2)}s`);
+        
+    } catch (error) {
+        console.error('Seek error:', error);
+    }
 }
 
 // Make functions globally available
 window.seekTo = seekTo;
 window.seekToTouch = seekToTouch;
+window.seekToAlternative = seekToAlternative;
 
 function initializeApp() {
     // Get Telegram user ID
@@ -314,18 +392,25 @@ function initializeAudioPlayer() {
     
     audioPlayer.addEventListener('canplay', function() {
         console.log('Audio can play');
-        hideLoadingIndicator();
+        // Only hide loading indicator if not seeking
+        if (!isDragging) {
+            hideLoadingIndicator();
+        }
     });
     
     audioPlayer.addEventListener('play', function() {
         console.log('Audio started playing');
         isPlaying = true;
         updatePlayButton();
-        hideLoadingIndicator();
-        startProgressUpdates();
         
-        // Send play event only once
-        if (currentTrack) {
+        // Only hide loading indicator and start progress updates if not seeking
+        if (!isDragging) {
+            hideLoadingIndicator();
+            startProgressUpdates();
+        }
+        
+        // Send play event only once and only if not seeking
+        if (currentTrack && !isDragging) {
             sendDataToBot('play_toggled', {
                 is_playing: true,
                 track_id: currentTrack.id
