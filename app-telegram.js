@@ -39,6 +39,12 @@ let progressUpdateInterval = null; // Interval for updating progress
 let isDragging = false; // Track if user is dragging progress bar
 // Volume control variables removed
 
+// New features
+let isShuffleMode = false; // Shuffle mode state
+let isRepeatMode = false; // Repeat mode state
+let currentPlaylist = []; // Current playlist
+let originalTrackOrder = []; // Original track order for shuffle
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
@@ -440,6 +446,10 @@ window.seekTo = seekTo;
 window.seekToTouch = seekToTouch;
 window.seekToAlternative = seekToAlternative;
 window.seekWithRangeRequest = seekWithRangeRequest;
+window.toggleShuffle = toggleShuffle;
+window.toggleRepeat = toggleRepeat;
+window.showPlaylist = showPlaylist;
+window.clearPlaylist = clearPlaylist;
 
 function initializeApp() {
     // Get Telegram user ID
@@ -453,6 +463,9 @@ function initializeApp() {
     
     // Initialize audio player
     initializeAudioPlayer();
+    
+    // Update statistics
+    updatePlaylistStats();
     
     updatePlayerDisplay();
     showLoading(false);
@@ -808,8 +821,11 @@ function createTrackHTML(track, index) {
                 <i class="fas fa-star"></i>
             </button>
             <div class="track-actions">
-                <button class="play-btn" onclick="event.stopPropagation(); playTrack(${playIndex})">
+                <button class="play-btn" onclick="event.stopPropagation(); playTrack(${playIndex})" title="Воспроизвести">
                     <i class="fas fa-play"></i>
+                </button>
+                <button class="playlist-add-btn" onclick="event.stopPropagation(); addToPlaylist(track)" title="Добавить в плейлист">
+                    <i class="fas fa-plus"></i>
                 </button>
             </div>
         </div>
@@ -1298,6 +1314,150 @@ function updateFavoritesButton() {
         } else {
             profileBtn.classList.remove('active');
         }
+    }
+}
+
+// ===== NEW FEATURES =====
+
+// Shuffle functionality
+function toggleShuffle() {
+    isShuffleMode = !isShuffleMode;
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    
+    if (shuffleBtn) {
+        if (isShuffleMode) {
+            shuffleBtn.classList.add('active');
+            // Save original order
+            originalTrackOrder = [...allTracks];
+            // Shuffle tracks
+            shuffleTracks();
+        } else {
+            shuffleBtn.classList.remove('active');
+            // Restore original order
+            allTracks = [...originalTrackOrder];
+            renderTracks();
+        }
+    }
+    
+    console.log(`Shuffle mode: ${isShuffleMode ? 'ON' : 'OFF'}`);
+}
+
+function shuffleTracks() {
+    if (allTracks.length <= 1) return;
+    
+    const shuffled = [...allTracks];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    allTracks = shuffled;
+    renderTracks();
+}
+
+// Repeat functionality
+function toggleRepeat() {
+    isRepeatMode = !isRepeatMode;
+    const repeatBtn = document.getElementById('repeatBtn');
+    
+    if (repeatBtn) {
+        if (isRepeatMode) {
+            repeatBtn.classList.add('active');
+        } else {
+            repeatBtn.classList.remove('active');
+        }
+    }
+    
+    console.log(`Repeat mode: ${isRepeatMode ? 'ON' : 'OFF'}`);
+}
+
+// Playlist functionality
+function showPlaylist() {
+    showSection('playlist');
+    loadPlaylist();
+}
+
+function loadPlaylist() {
+    const playlistContent = document.getElementById('playlistContent');
+    if (!playlistContent) return;
+    
+    if (currentPlaylist.length === 0) {
+        playlistContent.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-list" style="font-size: 48px; color: var(--text-hint); margin-bottom: 16px;"></i>
+                <h3>Плейлист пуст</h3>
+                <p>Добавьте треки в плейлист для воспроизведения</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const playlistHtml = currentPlaylist.map((track, index) => `
+        <div class="playlist-item ${currentTrackIndex === index ? 'playing' : ''}" onclick="playTrackFromPlaylist(${index})">
+            <div class="playlist-item-number">${index + 1}</div>
+            <div class="playlist-item-info">
+                <div class="playlist-item-title">${escapeHtml(track.title || track.name || 'Без названия')}</div>
+                <div class="playlist-item-artist">${escapeHtml(track.artist || track.performer || 'Неизвестный исполнитель')}</div>
+            </div>
+            <div class="playlist-item-actions">
+                <button class="playlist-remove-btn" onclick="removeFromPlaylist(${index}, event)" title="Удалить из плейлиста">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    playlistContent.innerHTML = playlistHtml;
+}
+
+function addToPlaylist(track) {
+    if (!currentPlaylist.find(t => t.id === track.id)) {
+        currentPlaylist.push(track);
+        updatePlaylistStats();
+        console.log(`Added to playlist: ${track.title}`);
+    }
+}
+
+function removeFromPlaylist(index, event) {
+    event.stopPropagation();
+    currentPlaylist.splice(index, 1);
+    loadPlaylist();
+    updatePlaylistStats();
+}
+
+function clearPlaylist() {
+    currentPlaylist = [];
+    loadPlaylist();
+    updatePlaylistStats();
+}
+
+function playTrackFromPlaylist(index) {
+    const track = currentPlaylist[index];
+    if (track) {
+        // Find track in allTracks and play it
+        const trackIndex = allTracks.findIndex(t => t.id === track.id);
+        if (trackIndex !== -1) {
+            playTrack(trackIndex);
+        }
+    }
+}
+
+// Statistics
+function updatePlaylistStats() {
+    const totalTracksEl = document.getElementById('totalTracks');
+    const favoriteCountEl = document.getElementById('favoriteCount');
+    const playlistCountEl = document.getElementById('playlistCount');
+    
+    if (totalTracksEl) {
+        totalTracksEl.textContent = allTracks.length;
+    }
+    
+    if (favoriteCountEl) {
+        favoriteCountEl.textContent = favoriteTracks.length;
+    }
+    
+    if (playlistCountEl) {
+        playlistCountEl.textContent = currentPlaylist.length;
     }
 }
 

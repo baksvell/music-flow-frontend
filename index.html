@@ -40,9 +40,17 @@
             <section class="section active" id="homeSection">
                 <div class="section-header">
                     <h2>Все треки</h2>
-                    <button class="shuffle-btn" onclick="shuffleTracks()">
-                        <i class="fas fa-random"></i>
-                    </button>
+                    <div class="header-actions">
+                        <button class="action-btn shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()" title="Перемешать">
+                            <i class="fas fa-random"></i>
+                        </button>
+                        <button class="action-btn repeat-btn" id="repeatBtn" onclick="toggleRepeat()" title="Повтор">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <button class="action-btn refresh-btn" onclick="loadTracks()" title="Обновить">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="search-container">
@@ -68,6 +76,25 @@
                 </div>
             </section>
 
+            <!-- Playlist Section -->
+            <section class="section" id="playlistSection">
+                <div class="section-header">
+                    <h2>Плейлист</h2>
+                    <div class="header-actions">
+                        <button class="action-btn" onclick="clearPlaylist()" title="Очистить плейлист">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="playlist-content" id="playlistContent">
+                    <div class="empty-state">
+                        <i class="fas fa-list" style="font-size: 48px; color: var(--text-hint); margin-bottom: 16px;"></i>
+                        <h3>Плейлист пуст</h3>
+                        <p>Добавьте треки в плейлист для воспроизведения</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Profile Section -->
             <section class="section" id="profileSection">
                 <div class="section-header">
@@ -75,17 +102,32 @@
                 </div>
                 
                 <div class="profile-content">
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="totalTracks">0</div>
+                            <div class="stat-label">Всего треков</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="favoriteCount">0</div>
+                            <div class="stat-label">В избранном</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="playlistCount">0</div>
+                            <div class="stat-label">В плейлисте</div>
+                        </div>
+                    </div>
+                    
                     <div class="app-info">
                         <div class="info-card">
                             <i class="fas fa-music"></i>
                             <h3>MusicFlow</h3>
-                            <p>Простой и удобный музыкальный плеер для Telegram</p>
+                            <p>Современное музыкальное приложение для Telegram</p>
                         </div>
                         
                         <div class="info-card">
                             <i class="fas fa-info-circle"></i>
                             <h3>Версия</h3>
-                            <p>2.0.0 - Упрощенная версия</p>
+                            <p>3.0.0 - Темная тема</p>
                         </div>
                         
                         <div class="info-card">
@@ -108,14 +150,17 @@
                     </div>
                     
                     <div class="player-controls">
-                        <button class="control-btn" id="prevBtn" onclick="playPrevious()">
+                        <button class="control-btn" id="prevBtn" onclick="playPrevious()" title="Предыдущий трек">
                             <i class="fas fa-step-backward"></i>
                         </button>
-                        <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()">
+                        <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()" title="Воспроизвести/Пауза">
                             <i class="fas fa-play"></i>
                         </button>
-                        <button class="control-btn" id="nextBtn" onclick="playNext()">
+                        <button class="control-btn" id="nextBtn" onclick="playNext()" title="Следующий трек">
                             <i class="fas fa-step-forward"></i>
+                        </button>
+                        <button class="control-btn playlist-btn" onclick="showPlaylist()" title="Плейлист">
+                            <i class="fas fa-list"></i>
                         </button>
                         
                     </div>
