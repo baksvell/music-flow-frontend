@@ -1,0 +1,13 @@
+# Ignore development files
+app-simple.js
+app-v2.js
+index-simple.html
+index-v2.html
+style-simple.css
+style-v2.css
+style.css
+
+# Keep only the main Telegram files
+# index.html
+# app-telegram.js
+# style-telegram.css

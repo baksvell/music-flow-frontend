@@ -1,15 +1,19 @@
 {
   "name": "music-flow-frontend",
   "version": "1.0.0",
-  "description": "Music Flow Telegram Mini App Frontend",
+  "description": "Music Flow Telegram Mini App Frontend - Static HTML/CSS/JS",
   "main": "index.html",
   "scripts": {
-    "build": "echo 'No build step required'",
-    "dev": "echo 'Open index.html in browser'"
+    "build": "echo 'Static site - no build required'",
+    "dev": "echo 'Static site - open index.html in browser'",
+    "start": "echo 'Static site deployed'"
   },
-  "keywords": ["telegram", "music", "mini-app"],
+  "keywords": ["telegram", "music", "mini-app", "static"],
   "author": "baksvell",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
 }
 
 
