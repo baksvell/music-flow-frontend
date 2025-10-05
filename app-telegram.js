@@ -1333,8 +1333,14 @@ async function loadFavoritesFromStorage() {
         const response = await fetch(`https://mysicflow.onrender.com/favorites/${telegramUserId}`);
         if (response.ok) {
             const result = await response.json();
-            favoriteTracks = result.tracks.map(track => track.id);
-            console.log('Loaded favorites from backend:', favoriteTracks);
+            // Проверяем, что result.tracks существует и является массивом
+            if (result && result.tracks && Array.isArray(result.tracks)) {
+                favoriteTracks = result.tracks.map(track => track.id);
+                console.log('Loaded favorites from backend:', favoriteTracks);
+            } else {
+                console.log('No favorites data received from backend');
+                favoriteTracks = [];
+            }
         } else {
             console.log('Failed to load favorites from backend');
             favoriteTracks = [];
