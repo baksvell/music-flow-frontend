@@ -515,48 +515,12 @@ function seekWithRangeRequest(event) {
 
 // Volume dragging functions removed
 
-// Quick seek functions (10 seconds forward/backward)
-function seekForward() {
-    if (!audioPlayer || !audioPlayer.duration) return;
-    
-    const newTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 10);
-    audioPlayer.currentTime = newTime;
-    
-    console.log(`Seek forward 10s to: ${newTime.toFixed(2)}s`);
-    updateProgressBar();
-    
-    // Show visual feedback
-    const progressBar = document.getElementById('progressBar');
-    if (progressBar) {
-        progressBar.classList.add('seeking');
-        setTimeout(() => progressBar.classList.remove('seeking'), 200);
-    }
-}
-
-function seekBackward() {
-    if (!audioPlayer || !audioPlayer.duration) return;
-    
-    const newTime = Math.max(0, audioPlayer.currentTime - 10);
-    audioPlayer.currentTime = newTime;
-    
-    console.log(`Seek backward 10s to: ${newTime.toFixed(2)}s`);
-    updateProgressBar();
-    
-    // Show visual feedback
-    const progressBar = document.getElementById('progressBar');
-    if (progressBar) {
-        progressBar.classList.add('seeking');
-        setTimeout(() => progressBar.classList.remove('seeking'), 200);
-    }
-}
 
 // Make functions globally available
 window.seekTo = seekTo;
 window.seekToTouch = seekToTouch;
 window.seekToAlternative = seekToAlternative;
 window.seekWithRangeRequest = seekWithRangeRequest;
-window.seekForward = seekForward;
-window.seekBackward = seekBackward;
 window.toggleShuffle = toggleShuffle;
 window.toggleRepeat = toggleRepeat;
 window.showPlaylist = showPlaylist;

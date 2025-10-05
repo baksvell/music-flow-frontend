@@ -1006,26 +1006,6 @@ body {
     transform: scale(0.9);
 }
 
-/* Seek buttons (fast forward/backward) */
-.seek-btn {
-    background: var(--bg-tertiary);
-    color: var(--text-secondary);
-    font-size: 14px;
-    width: 36px;
-    height: 36px;
-    border: 1px solid var(--border-color);
-}
-
-.seek-btn:hover, .seek-btn:active {
-    background: var(--accent-primary);
-    color: white;
-    border-color: var(--accent-primary);
-    transform: scale(0.95);
-}
-
-.seek-btn:active {
-    transform: scale(0.9);
-}
 
 /* Favorite button styles */
 .favorite-btn {
