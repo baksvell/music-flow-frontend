@@ -87,81 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
     sendDataToBot('app_loaded', { timestamp: new Date().toISOString() });
 });
 
-// Loading indicator functions
-function showLoadingIndicator(message = 'Загрузка...') {
-    try {
-        // Create or update loading indicator
-        let loadingDiv = document.getElementById('loadingIndicator');
-        if (!loadingDiv) {
-            loadingDiv = document.createElement('div');
-            loadingDiv.id = 'loadingIndicator';
-            loadingDiv.className = 'loading-indicator';
-            loadingDiv.innerHTML = `
-                <div class="loading-content">
-                    <div class="loading-spinner"></div>
-                    <div class="loading-text">${message}</div>
-                    <div class="loading-progress">
-                        <div class="loading-bar"></div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(loadingDiv);
-        } else {
-            const loadingText = loadingDiv.querySelector('.loading-text');
-            if (loadingText) {
-                loadingText.textContent = message;
-            }
-        }
-    
-    loadingDiv.style.display = 'flex';
-    
-    // Animate progress bar
-    const progressBar = loadingDiv.querySelector('.loading-bar');
-    if (progressBar) {
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress > 90) progress = 90;
-            progressBar.style.width = progress + '%';
-        }, 200);
-        
-        // Store interval for cleanup
-        loadingDiv.interval = interval;
-    }
-    
-    } catch (error) {
-        console.error('Error showing loading indicator:', error);
-        // Fallback: just log the message
-        console.log('Loading:', message);
-    }
-}
 
-function hideLoadingIndicator() {
-    try {
-        const loadingDiv = document.getElementById('loadingIndicator');
-        if (loadingDiv) {
-            // Clear interval
-            if (loadingDiv.interval) {
-                clearInterval(loadingDiv.interval);
-            }
-            
-            // Complete progress bar
-            const progressBar = loadingDiv.querySelector('.loading-bar');
-            if (progressBar) {
-                progressBar.style.width = '100%';
-            }
-            
-            // Hide after short delay
-            setTimeout(() => {
-                if (loadingDiv) {
-                    loadingDiv.style.display = 'none';
-                }
-            }, 300);
-        }
-    } catch (error) {
-        console.error('Error hiding loading indicator:', error);
-    }
-}
 
 // Preload next track for faster playback
 function preloadNextTrack(currentIndex) {
@@ -563,10 +489,7 @@ function initializeAudioPlayer() {
     
     audioPlayer.addEventListener('canplay', function() {
         console.log('Audio can play');
-        // Only hide loading indicator if not seeking
-        if (!isDragging) {
-            hideLoadingIndicator();
-        }
+        // Audio can play
     });
     
     audioPlayer.addEventListener('play', function() {
@@ -574,9 +497,8 @@ function initializeAudioPlayer() {
         isPlaying = true;
         updatePlayButton();
         
-        // Only hide loading indicator and start progress updates if not seeking
+        // Start progress updates if not seeking
         if (!isDragging) {
-            hideLoadingIndicator();
             startProgressUpdates();
         }
         
@@ -644,7 +566,6 @@ function initializeAudioPlayer() {
     
     audioPlayer.addEventListener('error', function(e) {
         console.error('Audio error:', e);
-        hideLoadingIndicator();
         // Don't show alert immediately, let playTrack handle it
     });
 }
@@ -993,13 +914,11 @@ function playTrack(index) {
     currentTrack = allTracks[index];
     console.log('Playing track:', currentTrack);
     
-    // Show loading indicator
-    showLoadingIndicator('Загрузка аудио...');
+    // Loading audio
     
     // Get audio URL
     const audioUrl = getAudioUrl(currentTrack);
     if (!audioUrl) {
-        hideLoadingIndicator();
         safeShowAlert('Аудио файл недоступен');
         isPlayingTrack = false;
         return;
@@ -1015,7 +934,6 @@ function playTrack(index) {
         console.log('Audio playing successfully');
         updatePlayerDisplay();
         updatePlayButton();
-        hideLoadingIndicator();
         
         // Initialize progress bar
         updateProgressBar();
