@@ -729,6 +729,22 @@ body {
     transform: translate(-50%, -50%) scale(1.2);
 }
 
+/* Visual feedback for seeking */
+.progress-bar.seeking {
+    background: var(--accent-primary);
+    opacity: 0.8;
+}
+
+.progress-bar.seeking .progress-fill {
+    background: white;
+}
+
+.progress-bar.seeking .progress-handle {
+    background: white;
+    border: 2px solid var(--accent-primary);
+    transform: translate(-50%, -50%) scale(1.3);
+}
+
 .player-controls {
     display: flex;
     align-items: center;
@@ -987,6 +1003,27 @@ body {
 }
 
 .control-btn:active {
+    transform: scale(0.9);
+}
+
+/* Seek buttons (fast forward/backward) */
+.seek-btn {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-size: 14px;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-color);
+}
+
+.seek-btn:hover, .seek-btn:active {
+    background: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+    transform: scale(0.95);
+}
+
+.seek-btn:active {
     transform: scale(0.9);
 }
 

@@ -280,6 +280,11 @@ function seekTo(event) {
     event.preventDefault();
     
     const progressBar = document.getElementById('progressBar');
+    if (!progressBar) {
+        console.log('Progress bar not found');
+        return;
+    }
+    
     const rect = progressBar.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
     const percentage = Math.max(0, Math.min(1, clickX / rect.width));
@@ -287,11 +292,30 @@ function seekTo(event) {
     
     console.log(`Seeking to: ${newTime.toFixed(2)}s (${(percentage * 100).toFixed(1)}%)`);
     
-    // Simple seeking - now that server supports range requests
-    audioPlayer.currentTime = newTime;
+    // Set dragging flag to prevent progress updates during seek
+    isDragging = true;
     
-    // Update progress bar immediately
-    updateProgressBar();
+    try {
+        // Simple seeking - now that server supports range requests
+        audioPlayer.currentTime = newTime;
+        
+        // Update progress bar immediately
+        updateProgressBar();
+        
+        // Show visual feedback
+        progressBar.classList.add('seeking');
+        
+        // Reset dragging flag after a short delay
+        setTimeout(() => {
+            isDragging = false;
+            progressBar.classList.remove('seeking');
+        }, 300);
+        
+    } catch (error) {
+        console.error('Seek error:', error);
+        isDragging = false;
+        progressBar.classList.remove('seeking');
+    }
 }
 
 // Touch support for mobile devices
@@ -303,6 +327,11 @@ function seekToTouch(event) {
     event.preventDefault();
     
     const progressBar = document.getElementById('progressBar');
+    if (!progressBar) {
+        console.log('Progress bar not found for touch');
+        return;
+    }
+    
     const rect = progressBar.getBoundingClientRect();
     const touch = event.touches[0] || event.changedTouches[0];
     const clickX = touch.clientX - rect.left;
@@ -311,19 +340,30 @@ function seekToTouch(event) {
     
     console.log(`Touch seeking to: ${newTime.toFixed(2)}s (${(percentage * 100).toFixed(1)}%)`);
     
-    // Add visual feedback
-    progressBar.classList.add('touching');
+    // Set dragging flag
+    isDragging = true;
     
-    // Simple seeking - now that server supports range requests
-    audioPlayer.currentTime = newTime;
-    
-    // Update progress bar immediately
-    updateProgressBar();
-    
-    // Remove visual feedback
-    setTimeout(() => {
-        progressBar.classList.remove('touching');
-    }, 200);
+    try {
+        // Add visual feedback
+        progressBar.classList.add('touching', 'seeking');
+        
+        // Simple seeking - now that server supports range requests
+        audioPlayer.currentTime = newTime;
+        
+        // Update progress bar immediately
+        updateProgressBar();
+        
+        // Remove visual feedback and reset flag
+        setTimeout(() => {
+            progressBar.classList.remove('touching', 'seeking');
+            isDragging = false;
+        }, 300);
+        
+    } catch (error) {
+        console.error('Touch seek error:', error);
+        progressBar.classList.remove('touching', 'seeking');
+        isDragging = false;
+    }
 }
 
 // Alternative seeking method that doesn't trigger events
@@ -475,11 +515,48 @@ function seekWithRangeRequest(event) {
 
 // Volume dragging functions removed
 
+// Quick seek functions (10 seconds forward/backward)
+function seekForward() {
+    if (!audioPlayer || !audioPlayer.duration) return;
+    
+    const newTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 10);
+    audioPlayer.currentTime = newTime;
+    
+    console.log(`Seek forward 10s to: ${newTime.toFixed(2)}s`);
+    updateProgressBar();
+    
+    // Show visual feedback
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+        progressBar.classList.add('seeking');
+        setTimeout(() => progressBar.classList.remove('seeking'), 200);
+    }
+}
+
+function seekBackward() {
+    if (!audioPlayer || !audioPlayer.duration) return;
+    
+    const newTime = Math.max(0, audioPlayer.currentTime - 10);
+    audioPlayer.currentTime = newTime;
+    
+    console.log(`Seek backward 10s to: ${newTime.toFixed(2)}s`);
+    updateProgressBar();
+    
+    // Show visual feedback
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+        progressBar.classList.add('seeking');
+        setTimeout(() => progressBar.classList.remove('seeking'), 200);
+    }
+}
+
 // Make functions globally available
 window.seekTo = seekTo;
 window.seekToTouch = seekToTouch;
 window.seekToAlternative = seekToAlternative;
 window.seekWithRangeRequest = seekWithRangeRequest;
+window.seekForward = seekForward;
+window.seekBackward = seekBackward;
 window.toggleShuffle = toggleShuffle;
 window.toggleRepeat = toggleRepeat;
 window.showPlaylist = showPlaylist;
