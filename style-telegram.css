@@ -377,9 +377,6 @@ body {
     color: var(--text-secondary);
 }
 
-.play-count {
-    color: var(--accent-primary);
-}
 
 .track-actions {
     display: flex;

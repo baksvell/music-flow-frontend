@@ -824,7 +824,6 @@ function createTrackHTML(track, index) {
                 <div class="track-artist">${escapeHtml(track.artist || track.performer || 'Неизвестный исполнитель')}</div>
                 <div class="track-meta">
                     <span class="track-duration">${formatDuration(track.duration || track.length)}</span>
-                    ${track.play_count > 0 ? `<span class="play-count">${track.play_count} прослушиваний</span>` : ''}
                 </div>
             </div>
             <div class="track-actions">
