@@ -751,33 +751,39 @@ async function searchTracks(query) {
         console.log('Starting search for:', query);
         showLoading(true);
         
-        // Try search endpoints (case-insensitive search)
-        const searchEndpoints = [
-            `https://mysicflow.onrender.com/tracks/search?q=${encodeURIComponent(query)}`
-        ];
+        // Try search endpoints using POST with JSON body
+        const searchEndpoint = 'https://mysicflow.onrender.com/tracks/search';
         
-        console.log('Search endpoints:', searchEndpoints);
+        console.log('Search endpoint:', searchEndpoint);
+        console.log('Search query:', query);
         
         let found = false;
-        for (const endpoint of searchEndpoints) {
-            try {
-                console.log('Fetching from endpoint:', endpoint);
-                const response = await fetch(endpoint);
+        try {
+            console.log('Sending POST request to:', searchEndpoint);
+            const response = await fetch(searchEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    q: query
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Search response:', data);
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    if (data.results || data.tracks || Array.isArray(data)) {
-                        allTracks = data.results || data.tracks || data;
-                        console.log(`Found ${allTracks.length} tracks for query: ${query}`);
-                        found = true;
-                        break;
-                    }
+                if (data.results || data.tracks || Array.isArray(data)) {
+                    allTracks = data.results || data.tracks || data;
+                    console.log(`Found ${allTracks.length} tracks for query: ${query}`);
+                    found = true;
                 }
-            } catch (error) {
-                console.error(`Search endpoint error: ${endpoint}`, error);
-                continue;
+            } else {
+                console.error('Search response not ok:', response.status, response.statusText);
             }
+        } catch (error) {
+            console.error('Search endpoint error:', error);
         }
         
         if (!found) {
