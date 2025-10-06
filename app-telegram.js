@@ -16,6 +16,11 @@ class AIBattleSystem {
         this.currentAudio = null;
         this.currentSection = 'battle';
         
+        // Magenta.js models
+        this.melodyRNN = null;
+        this.player = null;
+        this.modelsLoaded = false;
+        
         this.init();
     }
 
@@ -34,6 +39,9 @@ class AIBattleSystem {
             // Отключаем кнопки до загрузки
             this.setButtonsEnabled(false);
             
+            // Инициализируем Magenta.js модели
+            await this.initializeMagentaModels();
+            
             // Загружаем начальный баттл
             await this.loadNewBattle();
             
@@ -42,6 +50,34 @@ class AIBattleSystem {
             console.log('AI Battle System инициализирован в Telegram Mini App');
         } catch (error) {
             console.error('Ошибка инициализации AI Battle System:', error);
+            this.showError('Ошибка инициализации нейросетей: ' + error.message);
+        }
+    }
+
+    async initializeMagentaModels() {
+        try {
+            console.log('Инициализация Magenta.js моделей...');
+            
+            // Проверяем доступность Magenta.js
+            if (typeof mm === 'undefined') {
+                throw new Error('Magenta.js не загружен');
+            }
+            
+            // Инициализируем MelodyRNN для сети A (Melody Master)
+            this.melodyRNN = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/basic_rnn');
+            await this.melodyRNN.initialize();
+            console.log('MelodyRNN загружен');
+            
+            // Инициализируем Player для воспроизведения
+            this.player = new mm.Player();
+            console.log('Player инициализирован');
+            
+            this.modelsLoaded = true;
+            console.log('Все Magenta.js модели успешно загружены');
+            
+        } catch (error) {
+            console.error('Ошибка загрузки Magenta.js моделей:', error);
+            throw new Error(`Не удалось загрузить нейросети: ${error.message}`);
         }
     }
 
@@ -138,8 +174,17 @@ class AIBattleSystem {
                 throw new Error(`Нейросеть ${networkId} не найдена`);
             }
 
-            // Генерируем музыку на основе параметров
-            const audioBuffer = await this.generateMusic(network.music_params);
+            let audioBuffer;
+            
+            // Для сети A используем Magenta.js MelodyRNN
+            if (networkId === 'a' && this.modelsLoaded && this.melodyRNN) {
+                console.log('Генерируем музыку через Magenta.js MelodyRNN для сети A');
+                audioBuffer = await this.generateMusicWithMagenta(network.music_params);
+            } else {
+                // Для сети B или если Magenta не загружен - используем старый метод
+                console.log(`Генерируем музыку через Web Audio API для сети ${networkId}`);
+                audioBuffer = await this.generateMusic(network.music_params);
+            }
             
             // Воспроизводим
             this.playAudioBuffer(audioBuffer);
@@ -149,8 +194,111 @@ class AIBattleSystem {
             
         } catch (error) {
             console.error(`Ошибка воспроизведения нейросети ${networkId}:`, error);
-            this.showError(`Ошибка воспроизведения нейросети ${networkId}`);
+            this.showError(`Ошибка воспроизведения нейросети ${networkId}: ${error.message}`);
         }
+    }
+
+    async generateMusicWithMagenta(params) {
+        try {
+            console.log('Генерация музыки через Magenta.js с параметрами:', params);
+            
+            // Создаем начальную последовательность нот на основе параметров баттла
+            const startSequence = this.createStartSequenceFromParams(params);
+            
+            // Настраиваем параметры генерации на основе параметров нейросети
+            const temperature = this.mapParamsToTemperature(params);
+            const steps = 64; // Длина генерируемой последовательности
+            
+            console.log(`Генерируем с temperature: ${temperature}, steps: ${steps}`);
+            
+            // Генерируем мелодию через MelodyRNN
+            const generatedSequence = await this.melodyRNN.continueSequence(
+                startSequence, 
+                steps, 
+                temperature
+            );
+            
+            console.log('MelodyRNN сгенерировал последовательность:', generatedSequence);
+            
+            // Конвертируем в аудио буфер
+            const audioBuffer = await this.convertSequenceToAudioBuffer(generatedSequence, params);
+            
+            return audioBuffer;
+            
+        } catch (error) {
+            console.error('Ошибка генерации через Magenta.js:', error);
+            throw new Error(`Magenta.js генерация не удалась: ${error.message}`);
+        }
+    }
+
+    createStartSequenceFromParams(params) {
+        // Создаем начальную последовательность на основе параметров баттла
+        const key = params.key || 'C';
+        const tempo = params.tempo || 120;
+        const energyLevel = params.energy_level || 0.5;
+        
+        // Создаем простую начальную мелодию
+        const startSequence = {
+            notes: [
+                { pitch: 60, startTime: 0, endTime: 0.5 }, // C4
+                { pitch: 64, startTime: 0.5, endTime: 1.0 }, // E4
+                { pitch: 67, startTime: 1.0, endTime: 1.5 }, // G4
+                { pitch: 72, startTime: 1.5, endTime: 2.0 }  // C5
+            ],
+            totalTime: 2.0,
+            quantizationInfo: { stepsPerQuarter: 4 }
+        };
+        
+        return startSequence;
+    }
+
+    mapParamsToTemperature(params) {
+        // Маппим параметры нейросети в temperature для MelodyRNN
+        const experimentalFactor = params.experimental_factor || 0.1;
+        const energyLevel = params.energy_level || 0.5;
+        const melodyComplexity = params.melody_complexity || 0.5;
+        
+        // Temperature от 0.1 (консервативно) до 1.5 (экспериментально)
+        const baseTemp = 0.5 + (experimentalFactor * 0.8);
+        const energyModifier = (energyLevel - 0.5) * 0.3;
+        const complexityModifier = (melodyComplexity - 0.5) * 0.2;
+        
+        const temperature = Math.max(0.1, Math.min(1.5, baseTemp + energyModifier + complexityModifier));
+        
+        console.log(`Temperature calculation: base=${baseTemp}, energy=${energyModifier}, complexity=${complexityModifier}, final=${temperature}`);
+        
+        return temperature;
+    }
+
+    async convertSequenceToAudioBuffer(sequence, params) {
+        try {
+            // Создаем NoteSequence из сгенерированной последовательности
+            const noteSequence = mm.sequences.quantizeNoteSequence(sequence, 4);
+            
+            // Конвертируем в аудио буфер через Magenta Player
+            const audioBuffer = await this.player.sequenceToAudioBuffer(noteSequence);
+            
+            console.log('Успешно конвертировали последовательность в аудио буфер');
+            return audioBuffer;
+            
+        } catch (error) {
+            console.error('Ошибка конвертации последовательности в аудио:', error);
+            // Fallback: создаем простой аудио буфер
+            return this.createFallbackAudioBuffer(params);
+        }
+    }
+
+    createFallbackAudioBuffer(params) {
+        // Создаем простой аудио буфер как fallback
+        const sampleRate = this.audioContext.sampleRate;
+        const duration = 30;
+        const bufferSize = sampleRate * duration;
+        const buffer = this.audioContext.createBuffer(2, bufferSize, sampleRate);
+        
+        // Генерируем простую мелодию
+        this.generateMelody(buffer, params);
+        
+        return buffer;
     }
 
     async generateMusic(params) {
