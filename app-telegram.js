@@ -58,32 +58,43 @@ class AIBattleSystem {
     async initializeMagentaModels() {
         try {
             console.log('Инициализация Magenta.js моделей...');
+            this.showModelLoading(true);
             
             // Проверяем доступность Magenta.js
+            this.updateModelProgress(10, 'Проверка Magenta.js...');
             if (typeof mm === 'undefined') {
                 throw new Error('Magenta.js не загружен');
             }
             
             // Инициализируем MelodyRNN для сети A (Melody Master)
+            this.updateModelProgress(30, 'Загрузка MelodyRNN...');
             this.melodyRNN = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/basic_rnn');
             await this.melodyRNN.initialize();
             console.log('MelodyRNN загружен');
             
             // Инициализируем MusicVAE для сети B (Harmony Explorer)
-            // Джазовая трио модель для контраста с мелодической сетью A
+            this.updateModelProgress(60, 'Загрузка MusicVAE (Jazz Explorer)...');
             this.musicVAE = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/hierdec-trio_16bar');
             await this.musicVAE.initialize();
             console.log('MusicVAE (hierdec-trio_16bar) загружен');
 
             // Инициализируем Player для воспроизведения
+            this.updateModelProgress(90, 'Инициализация Player...');
             this.player = new mm.Player();
             console.log('Player инициализирован');
             
+            this.updateModelProgress(100, 'Готово!');
             this.modelsLoaded = true;
             console.log('Все Magenta.js модели успешно загружены');
             
+            // Скрываем прогресс через 1 секунду
+            setTimeout(() => {
+                this.showModelLoading(false);
+            }, 1000);
+            
         } catch (error) {
             console.error('Ошибка загрузки Magenta.js моделей:', error);
+            this.showModelLoading(false);
             throw new Error(`Не удалось загрузить нейросети: ${error.message}`);
         }
     }
@@ -181,21 +192,27 @@ class AIBattleSystem {
                 throw new Error(`Нейросеть ${networkId} не найдена`);
             }
 
+            // Показываем прогресс генерации
+            this.showGenerationProgress(true, networkId, network.name);
+            
             let audioBuffer;
             
             // Для сети A используем Magenta.js MelodyRNN
             if (networkId === 'a' && this.modelsLoaded && this.melodyRNN) {
                 console.log('Генерируем музыку через Magenta.js MelodyRNN для сети A');
-                audioBuffer = await this.generateMusicWithMagenta(network.music_params);
+                audioBuffer = await this.generateMusicWithMagenta(network.music_params, networkId);
             } else if (networkId === 'b' && this.modelsLoaded && this.musicVAE) {
                 // Для сети B используем Magenta.js MusicVAE
                 console.log('Генерируем музыку через Magenta.js MusicVAE для сети B');
-                audioBuffer = await this.generateMusicWithVAE(network.music_params);
+                audioBuffer = await this.generateMusicWithVAE(network.music_params, networkId);
             } else {
                 // Для сети B или если Magenta не загружен - используем старый метод
                 console.log(`Генерируем музыку через Web Audio API для сети ${networkId}`);
                 audioBuffer = await this.generateMusic(network.music_params);
             }
+            
+            // Скрываем прогресс генерации
+            this.showGenerationProgress(false);
             
             // Воспроизводим
             this.playAudioBuffer(audioBuffer);
@@ -205,6 +222,7 @@ class AIBattleSystem {
             
         } catch (error) {
             console.error(`Ошибка воспроизведения нейросети ${networkId}:`, error);
+            this.showGenerationProgress(false);
             this.showError(`Ошибка воспроизведения нейросети ${networkId}: ${error.message}`);
         }
     }
@@ -970,6 +988,146 @@ class AIBattleSystem {
             return parseInt(tg.initDataUnsafe.user.id);
         }
         return 1118235356; // Дефолтный ID для тестирования
+    }
+
+    // Progress Bar Management
+    showModelLoading(show) {
+        const element = document.getElementById('modelLoading');
+        if (element) {
+            element.style.display = show ? 'block' : 'none';
+        }
+    }
+
+    updateModelProgress(percent, status) {
+        const progressBar = document.getElementById('modelProgress');
+        const statusElement = document.getElementById('modelStatus');
+        
+        if (progressBar) {
+            progressBar.style.width = `${percent}%`;
+        }
+        
+        if (statusElement) {
+            statusElement.textContent = status;
+        }
+    }
+
+    showGenerationProgress(show, networkId = null, networkName = null) {
+        const element = document.getElementById('generationProgress');
+        const title = document.getElementById('generationTitle');
+        const subtitle = document.getElementById('generationSubtitle');
+        
+        if (element) {
+            element.style.display = show ? 'block' : 'none';
+        }
+        
+        if (show && networkId && networkName) {
+            if (title) {
+                title.textContent = `🎵 ${networkName} генерирует музыку`;
+            }
+            if (subtitle) {
+                const modelType = networkId === 'a' ? 'MelodyRNN (классическая мелодия)' : 'MusicVAE (джазовое трио)';
+                subtitle.textContent = `Используется ${modelType}...`;
+            }
+            this.updateGenerationProgress(0, 'Инициализация нейросети...');
+        }
+    }
+
+    updateGenerationProgress(percent, status) {
+        const progressBar = document.getElementById('generationProgressBar');
+        const statusElement = document.getElementById('generationStatus');
+        
+        if (progressBar) {
+            progressBar.style.width = `${percent}%`;
+        }
+        
+        if (statusElement) {
+            statusElement.textContent = status;
+        }
+    }
+
+    // Enhanced generation with progress updates
+    async generateMusicWithMagenta(params, networkId) {
+        try {
+            this.updateGenerationProgress(20, 'Создание начальной последовательности...');
+            console.log('Генерация музыки через Magenta.js с параметрами:', params);
+            
+            // Создаем начальную последовательность нот на основе параметров баттла
+            const startSequence = this.createStartSequenceFromParams(params);
+            
+            this.updateGenerationProgress(40, 'Настройка параметров генерации...');
+            // Настраиваем параметры генерации на основе параметров нейросети
+            const temperature = this.mapParamsToTemperature(params);
+            const steps = 64; // Длина генерируемой последовательности
+            
+            console.log(`Генерируем с temperature: ${temperature}, steps: ${steps}`);
+            
+            this.updateGenerationProgress(60, 'MelodyRNN генерирует мелодию...');
+            // Генерируем мелодию через MelodyRNN
+            const generatedSequence = await this.melodyRNN.continueSequence(
+                startSequence, 
+                steps, 
+                temperature
+            );
+            
+            console.log('MelodyRNN сгенерировал последовательность:', generatedSequence);
+            
+            this.updateGenerationProgress(80, 'Конвертация в аудио...');
+            // Конвертируем в аудио буфер
+            const audioBuffer = await this.convertSequenceToAudioBuffer(generatedSequence, params);
+            
+            this.updateGenerationProgress(100, 'Готово!');
+            return audioBuffer;
+            
+        } catch (error) {
+            console.error('Ошибка генерации через Magenta.js:', error);
+            throw new Error(`Magenta.js генерация не удалась: ${error.message}`);
+        }
+    }
+
+    async generateMusicWithVAE(params, networkId) {
+        try {
+            this.updateGenerationProgress(20, 'Инициализация MusicVAE...');
+            console.log('Генерация джазовой музыки через hierdec-trio_16bar с параметрами:', params);
+            if (!this.musicVAE) throw new Error('MusicVAE не инициализирован');
+
+            this.updateGenerationProgress(40, 'Настройка джазовых параметров...');
+            // temperature для VAE: используем experimental_factor и variation_factor
+            // Для джазовой модели делаем более консервативную температуру
+            const experimental = Math.max(0.3, Math.min(1.2, (params.experimental_factor || 0.3) * 0.8 + (params.variation_factor || 0.2) * 0.5));
+
+            console.log(`Генерируем джазовое трио с temperature: ${experimental}`);
+
+            this.updateGenerationProgress(60, 'MusicVAE генерирует джазовое трио...');
+            // Семплируем новую последовательность из латентного пространства
+            // hierdec-trio_16bar генерирует 16-тактовые джазовые композиции
+            const samples = await this.musicVAE.sample(1, experimental);
+            const sequence = samples[0];
+
+            this.updateGenerationProgress(80, 'Настройка темпа и конвертация...');
+            // Устанавливаем tempo из параметров баттла
+            if (params.tempo) {
+                sequence.tempos = [{ qpm: params.tempo }];
+            }
+
+            // Для джазовой модели добавляем специфичные настройки
+            if (params.energy_level && params.energy_level > 0.7) {
+                // Высокая энергия = более быстрый темп
+                sequence.tempos = [{ qpm: Math.min(180, params.tempo * 1.2) }];
+            }
+
+            console.log('hierdec-trio_16bar сгенерировал джазовую последовательность:', sequence);
+
+            // Конвертируем в аудио буфер
+            const audioBuffer = await this.convertSequenceToAudioBuffer(sequence, params);
+            
+            this.updateGenerationProgress(100, 'Готово!');
+            return audioBuffer;
+
+        } catch (error) {
+            console.error('Ошибка генерации через hierdec-trio_16bar:', error);
+            // Fallback на обычную генерацию
+            return this.generateMusic(params);
+        }
     }
 }
 

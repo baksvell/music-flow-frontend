@@ -42,10 +42,38 @@
                     <p>Конкурирующие нейросети создают музыку</p>
                 </div>
 
-                <!-- Загрузка -->
+                <!-- Загрузка моделей -->
+                <div id="modelLoading" class="model-loading" style="display: none;">
+                    <div class="loading-header">
+                        <h3>🤖 Инициализация нейросетей</h3>
+                        <p>Загружаем AI модели для генерации музыки...</p>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div id="modelProgress" class="progress-fill"></div>
+                        </div>
+                        <div id="modelStatus" class="progress-status">Подготовка...</div>
+                    </div>
+                </div>
+
+                <!-- Загрузка баттла -->
                 <div id="loading" class="loading" style="display: none;">
                     <div class="spinner"></div>
                     <p>Генерируем музыку...</p>
+                </div>
+
+                <!-- Генерация музыки -->
+                <div id="generationProgress" class="generation-progress" style="display: none;">
+                    <div class="generation-header">
+                        <h3 id="generationTitle">🎵 Генерация музыки</h3>
+                        <p id="generationSubtitle">Нейросеть создает уникальную композицию...</p>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div id="generationProgressBar" class="progress-fill generation-fill"></div>
+                        </div>
+                        <div id="generationStatus" class="progress-status">Инициализация...</div>
+                    </div>
                 </div>
 
                 <!-- Ошибка -->
