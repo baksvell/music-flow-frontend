@@ -17,7 +17,8 @@ class AIBattleSystem {
         this.currentSection = 'battle';
         
         // Magenta.js models
-        this.melodyRNN = null;
+        this.melodyRNN = null; // A: basic_rnn
+        this.melodyRNNB = null; // B: lookback_rnn
         this.player = null;
         this.modelsLoaded = false;
         this.performanceRNN = null;
@@ -67,17 +68,16 @@ class AIBattleSystem {
             }
             
             // Инициализируем MelodyRNN для сети A (Melody Master)
-            this.updateModelProgress(30, 'Загрузка MelodyRNN...');
+            this.updateModelProgress(30, 'Загрузка MelodyRNN (basic_rnn) для сети A...');
             this.melodyRNN = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/basic_rnn');
             await this.melodyRNN.initialize();
-            console.log('MelodyRNN загружен');
-            
-            // Инициализируем PerformanceRNN для сети B (Rhythm Explorer)
-            this.updateModelProgress(60, 'Загрузка PerformanceRNN (Rhythm Explorer)...');
-            // Используем PerformanceRNN - более стабильная модель для ритмических композиций
-            this.performanceRNN = new mm.PerformanceRNN('https://storage.googleapis.com/magentadata/js/checkpoints/performance_rnn/groove/2bar');
-            await this.performanceRNN.initialize();
-            console.log('PerformanceRNN (groove_2bar) загружен');
+            console.log('MelodyRNN basic_rnn загружен');
+
+            // Инициализируем вторую модель MelodyRNN для сети B (Lookback)
+            this.updateModelProgress(60, 'Загрузка MelodyRNN (lookback_rnn) для сети B...');
+            this.melodyRNNB = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/lookback_rnn');
+            await this.melodyRNNB.initialize();
+            console.log('MelodyRNN lookback_rnn загружен');
 
             // Инициализируем Player для воспроизведения
             this.updateModelProgress(90, 'Инициализация Player...');
@@ -200,12 +200,12 @@ class AIBattleSystem {
             
             // Для сети A используем Magenta.js MelodyRNN
             if (networkId === 'a' && this.modelsLoaded && this.melodyRNN) {
-                console.log('Генерируем музыку через Magenta.js MelodyRNN для сети A');
-                audioBuffer = await this.generateMusicWithMagenta(network.music_params, networkId);
-            } else if (networkId === 'b' && this.modelsLoaded && this.performanceRNN) {
-                // Для сети B используем Magenta.js PerformanceRNN
-                console.log('Генерируем музыку через Magenta.js PerformanceRNN для сети B');
-                audioBuffer = await this.generateMusicWithPerformanceRNN(network.music_params, networkId);
+                console.log('Генерируем музыку через Magenta.js MelodyRNN (basic_rnn) для сети A');
+                audioBuffer = await this.generateMusicWithMagenta(network.music_params, networkId, this.melodyRNN);
+            } else if (networkId === 'b' && this.modelsLoaded && this.melodyRNNB) {
+                // Для сети B используем вторую модель MelodyRNN (lookback_rnn)
+                console.log('Генерируем музыку через Magenta.js MelodyRNN (lookback_rnn) для сети B');
+                audioBuffer = await this.generateMusicWithMagenta(network.music_params, networkId, this.melodyRNNB);
             } else {
                 // Для сети B или если Magenta не загружен - используем старый метод
                 console.log(`Генерируем музыку через Web Audio API для сети ${networkId}`);
@@ -228,7 +228,7 @@ class AIBattleSystem {
         }
     }
 
-    async generateMusicWithMagenta(params) {
+    async generateMusicWithMagenta(params, networkId, rnnModel) {
         try {
             console.log('Генерация музыки через Magenta.js с параметрами:', params);
             
@@ -242,7 +242,8 @@ class AIBattleSystem {
             console.log(`Генерируем с temperature: ${temperature}, steps: ${steps}`);
             
             // Генерируем мелодию через MelodyRNN
-            const generatedSequence = await this.melodyRNN.continueSequence(
+            const modelToUse = rnnModel || this.melodyRNN;
+            const generatedSequence = await modelToUse.continueSequence(
                 startSequence, 
                 steps, 
                 temperature
@@ -1026,7 +1027,7 @@ class AIBattleSystem {
                 title.textContent = `🎵 ${networkName} генерирует музыку`;
             }
             if (subtitle) {
-                const modelType = networkId === 'a' ? 'MelodyRNN (классическая мелодия)' : 'PerformanceRNN (ритмическая композиция)';
+                const modelType = networkId === 'a' ? 'MelodyRNN basic_rnn' : 'MelodyRNN lookback_rnn';
                 subtitle.textContent = `Используется ${modelType}...`;
             }
             this.updateGenerationProgress(0, 'Инициализация нейросети...');
