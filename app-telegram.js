@@ -168,6 +168,90 @@ class AIBattleSystem {
         return buffer;
     }
 
+    getNotesForKey(key, pitchRange) {
+        // Базовые ноты для разных тональностей
+        const keyNotes = {
+            "C": [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25], // C major
+            "G": [293.66, 329.63, 369.99, 392.00, 440.00, 493.88, 554.37, 587.33], // G major
+            "D": [293.66, 329.63, 369.99, 415.30, 440.00, 493.88, 554.37, 622.25], // D major
+            "A": [220.00, 246.94, 277.18, 293.66, 329.63, 369.99, 415.30, 440.00], // A major
+            "E": [164.81, 185.00, 207.65, 220.00, 246.94, 277.18, 311.13, 329.63], // E major
+            "B": [123.47, 138.59, 155.56, 164.81, 185.00, 207.65, 233.08, 246.94], // B major
+            "F#": [92.50, 103.83, 116.54, 123.47, 138.59, 155.56, 174.61, 185.00], // F# major
+            "C#": [69.30, 77.78, 87.31, 92.50, 103.83, 116.54, 130.81, 138.59], // C# major
+            "Am": [220.00, 246.94, 261.63, 293.66, 329.63, 349.23, 392.00, 440.00], // A minor
+            "Em": [164.81, 185.00, 196.00, 220.00, 246.94, 261.63, 293.66, 329.63], // E minor
+            "Bm": [123.47, 138.59, 146.83, 164.81, 185.00, 196.00, 220.00, 246.94], // B minor
+            "F#m": [92.50, 103.83, 110.00, 123.47, 138.59, 146.83, 164.81, 185.00], // F# minor
+            "C#m": [69.30, 77.78, 82.41, 92.50, 103.83, 110.00, 123.47, 138.59], // C# minor
+            "G#m": [51.91, 58.27, 61.74, 69.30, 77.78, 82.41, 92.50, 103.83], // G# minor
+            "D#m": [38.89, 43.65, 46.25, 51.91, 58.27, 61.74, 69.30, 77.78], // D# minor
+            "A#m": [29.14, 32.70, 34.65, 38.89, 43.65, 46.25, 51.91, 58.27] // A# minor
+        };
+        
+        let notes = keyNotes[key] || keyNotes["C"];
+        
+        // Расширяем диапазон на основе pitchRange
+        if (pitchRange > 0.7) {
+            // Добавляем октавы выше и ниже
+            const lowerOctave = notes.map(freq => freq / 2);
+            const higherOctave = notes.map(freq => freq * 2);
+            notes = [...lowerOctave, ...notes, ...higherOctave];
+        } else if (pitchRange > 0.4) {
+            // Добавляем только верхнюю октаву
+            const higherOctave = notes.map(freq => freq * 2);
+            notes = [...notes, ...higherOctave];
+        }
+        
+        return notes;
+    }
+
+    generateMelodySequence(notes, pattern, density, complexity) {
+        const sequence = [];
+        const noteCount = Math.floor(density * 16) + 4; // 4-20 нот
+        
+        for (let i = 0; i < noteCount; i++) {
+            let noteIndex;
+            
+            switch (pattern) {
+                case "ascending_scale":
+                    noteIndex = i % notes.length;
+                    break;
+                case "descending_scale":
+                    noteIndex = (notes.length - 1) - (i % notes.length);
+                    break;
+                case "zigzag":
+                    noteIndex = i % 2 === 0 ? (i / 2) % notes.length : (notes.length - 1) - ((i - 1) / 2) % notes.length;
+                    break;
+                case "wave":
+                    noteIndex = Math.floor(Math.sin(i * 0.5) * (notes.length - 1) / 2 + (notes.length - 1) / 2);
+                    break;
+                case "stepwise":
+                    noteIndex = (i * 2) % notes.length;
+                    break;
+                case "leap_and_step":
+                    noteIndex = i % 3 === 0 ? Math.floor(Math.random() * notes.length) : (i - 1) % notes.length;
+                    break;
+                case "arpeggio":
+                    noteIndex = (i * 3) % notes.length;
+                    break;
+                case "simple_repetition":
+                default:
+                    noteIndex = i % 4; // Повторяем первые 4 ноты
+                    break;
+            }
+            
+            // Добавляем случайность на основе сложности
+            if (complexity > 0.5 && Math.random() < complexity) {
+                noteIndex = Math.floor(Math.random() * notes.length);
+            }
+            
+            sequence.push(notes[noteIndex]);
+        }
+        
+        return sequence;
+    }
+
     generateMelody(buffer, params) {
         const leftChannel = buffer.getChannelData(0);
         const rightChannel = buffer.getChannelData(1);
@@ -175,23 +259,42 @@ class AIBattleSystem {
         const tempo = params.tempo || 120;
         const melodyComplexity = params.melody_complexity || 0.5;
         const energyLevel = params.energy_level || 0.5;
+        const key = params.key || "C";
+        const melodyPattern = params.melody_pattern || "simple_repetition";
+        const noteDensity = params.note_density || 0.5;
+        const pitchRange = params.pitch_range || 0.5;
         
         const sampleRate = buffer.sampleRate;
         const duration = buffer.length / sampleRate;
         
-        // Основная мелодия
-        const baseFreq = 440; // A4
-        const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25]; // C4-C5
+        // Определяем ноты на основе тональности
+        const notes = this.getNotesForKey(key, pitchRange);
+        const melodyNotes = this.generateMelodySequence(notes, melodyPattern, noteDensity, melodyComplexity);
+        
+        // Генерируем мелодию на основе последовательности нот
+        const noteDuration = duration / melodyNotes.length;
         
         for (let i = 0; i < buffer.length; i++) {
             const time = i / sampleRate;
             
-            // Выбираем ноту на основе мелодической сложности
-            const noteIndex = Math.floor((time * melodyComplexity * 2) % notes.length);
-            const frequency = notes[noteIndex];
+            // Определяем текущую ноту на основе времени
+            const noteIndex = Math.floor(time / noteDuration) % melodyNotes.length;
+            const frequency = melodyNotes[noteIndex];
+            
+            // Добавляем плавные переходы между нотами
+            const noteStartTime = noteIndex * noteDuration;
+            const noteEndTime = (noteIndex + 1) * noteDuration;
+            const noteProgress = (time - noteStartTime) / noteDuration;
+            
+            // Амплитуда с учетом времени ноты
+            let amplitude = energyLevel * 0.3;
+            if (noteProgress < 0.1) {
+                amplitude *= noteProgress * 10; // Плавное нарастание
+            } else if (noteProgress > 0.9) {
+                amplitude *= (1 - noteProgress) * 10; // Плавное затухание
+            }
             
             // Генерируем волну
-            const amplitude = energyLevel * 0.3;
             const wave = Math.sin(2 * Math.PI * frequency * time) * amplitude;
             
             // Добавляем обертоны для богатства звука
@@ -212,22 +315,72 @@ class AIBattleSystem {
         const tempo = params.tempo || 120;
         const rhythmComplexity = params.rhythm_complexity || 0.5;
         const energyLevel = params.energy_level || 0.5;
+        const rhythmPattern = params.rhythm_pattern || "straight";
+        const syncopation = params.syncopation || 0.1;
+        const timeSignature = params.time_signature || "4/4";
         
         const sampleRate = buffer.sampleRate;
         const beatDuration = 60 / tempo; // Длительность одного бита в секундах
         const beatSamples = Math.floor(beatDuration * sampleRate);
         
-        // Генерируем ритмический паттерн
+        // Определяем количество долей в такте
+        const beatsPerMeasure = parseInt(timeSignature.split('/')[0]);
+        
+        // Генерируем ритмический паттерн на основе типа
         for (let i = 0; i < buffer.length; i += beatSamples) {
             const beatIndex = Math.floor(i / beatSamples);
+            const measureIndex = Math.floor(beatIndex / beatsPerMeasure);
+            const beatInMeasure = beatIndex % beatsPerMeasure;
             
-            // Простой ритмический паттерн
-            if (beatIndex % 4 === 0) {
-                // Сильный удар
-                this.addKickDrum(buffer, i, energyLevel);
-            } else if (beatIndex % 2 === 0 && rhythmComplexity > 0.5) {
-                // Слабый удар
-                this.addSnareDrum(buffer, i, energyLevel * 0.5);
+            let shouldPlay = false;
+            let drumType = "kick";
+            
+            switch (rhythmPattern) {
+                case "syncopated":
+                    // Синкопированный ритм
+                    shouldPlay = beatInMeasure === 0 || (beatInMeasure === 2 && syncopation > 0.3) || 
+                                (beatInMeasure === 1 && syncopation > 0.6);
+                    drumType = beatInMeasure === 0 ? "kick" : "snare";
+                    break;
+                case "polyrhythmic":
+                    // Полиритмический паттерн
+                    shouldPlay = beatInMeasure % 3 === 0 || (beatInMeasure % 2 === 0 && rhythmComplexity > 0.7);
+                    drumType = beatInMeasure % 3 === 0 ? "kick" : "snare";
+                    break;
+                case "irregular":
+                    // Нерегулярный ритм
+                    shouldPlay = Math.random() < (rhythmComplexity * 0.3 + 0.1);
+                    drumType = Math.random() < 0.5 ? "kick" : "snare";
+                    break;
+                case "swing":
+                    // Свинг
+                    shouldPlay = beatInMeasure === 0 || (beatInMeasure === 2 && rhythmComplexity > 0.4);
+                    drumType = beatInMeasure === 0 ? "kick" : "snare";
+                    break;
+                case "shuffle":
+                    // Шаффл
+                    shouldPlay = beatInMeasure % 2 === 0 || (beatInMeasure % 3 === 0 && rhythmComplexity > 0.5);
+                    drumType = beatInMeasure % 2 === 0 ? "kick" : "snare";
+                    break;
+                case "offbeat":
+                    // Офф-бит
+                    shouldPlay = beatInMeasure === 1 || beatInMeasure === 3;
+                    drumType = "snare";
+                    break;
+                case "straight":
+                default:
+                    // Прямой ритм
+                    shouldPlay = beatInMeasure === 0 || (beatInMeasure === 2 && rhythmComplexity > 0.5);
+                    drumType = beatInMeasure === 0 ? "kick" : "snare";
+                    break;
+            }
+            
+            if (shouldPlay) {
+                if (drumType === "kick") {
+                    this.addKickDrum(buffer, i, energyLevel);
+                } else {
+                    this.addSnareDrum(buffer, i, energyLevel * 0.7);
+                }
             }
         }
     }
