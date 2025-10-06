@@ -31,6 +31,9 @@ class AIBattleSystem {
             // Инициализируем Web Audio API
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             
+            // Отключаем кнопки до загрузки
+            this.setButtonsEnabled(false);
+            
             // Загружаем начальный баттл
             await this.loadNewBattle();
             
@@ -85,6 +88,7 @@ class AIBattleSystem {
     async loadNewBattle() {
         try {
             this.showLoading(true);
+            this.setButtonsEnabled(false);
             
             const response = await fetch('https://mysicflow.onrender.com/battle/start', {
                 method: 'POST',
@@ -105,17 +109,26 @@ class AIBattleSystem {
             
             this.updateUI();
             this.showLoading(false);
+            this.setButtonsEnabled(true);
             
             console.log('Новый баттл загружен:', this.currentBattle);
         } catch (error) {
             console.error('Ошибка загрузки баттла:', error);
             this.showError('Ошибка загрузки баттла');
             this.showLoading(false);
+            this.setButtonsEnabled(true);
         }
     }
 
     async playNetwork(networkId) {
         try {
+            // Проверяем, что баттл загружен
+            if (!this.currentBattle) {
+                console.log('Баттл еще не загружен, загружаем...');
+                await this.loadNewBattle();
+                return;
+            }
+            
             // Останавливаем текущее воспроизведение
             this.stopCurrentAudio();
             
@@ -475,6 +488,22 @@ class AIBattleSystem {
         if (loadingElement) {
             loadingElement.style.display = show ? 'block' : 'none';
         }
+    }
+
+    setButtonsEnabled(enabled) {
+        const buttons = [
+            'playNetworkA', 'playNetworkB', 
+            'selectNetworkA', 'selectNetworkB',
+            'confirmVote', 'skipBattle'
+        ];
+        
+        buttons.forEach(buttonId => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.disabled = !enabled;
+                button.style.opacity = enabled ? '1' : '0.5';
+            }
+        });
     }
 
     showError(message) {
