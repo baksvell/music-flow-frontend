@@ -20,6 +20,7 @@ class AIBattleSystem {
         this.melodyRNN = null;
         this.player = null;
         this.modelsLoaded = false;
+        this.musicVAE = null;
         
         this.init();
     }
@@ -68,6 +69,12 @@ class AIBattleSystem {
             await this.melodyRNN.initialize();
             console.log('MelodyRNN загружен');
             
+            // Инициализируем MusicVAE для сети B (Harmony Explorer)
+            // 16 тактовая мелодическая модель для большего разнообразия
+            this.musicVAE = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_16bar');
+            await this.musicVAE.initialize();
+            console.log('MusicVAE (mel_16bar) загружен');
+
             // Инициализируем Player для воспроизведения
             this.player = new mm.Player();
             console.log('Player инициализирован');
@@ -180,6 +187,10 @@ class AIBattleSystem {
             if (networkId === 'a' && this.modelsLoaded && this.melodyRNN) {
                 console.log('Генерируем музыку через Magenta.js MelodyRNN для сети A');
                 audioBuffer = await this.generateMusicWithMagenta(network.music_params);
+            } else if (networkId === 'b' && this.modelsLoaded && this.musicVAE) {
+                // Для сети B используем Magenta.js MusicVAE
+                console.log('Генерируем музыку через Magenta.js MusicVAE для сети B');
+                audioBuffer = await this.generateMusicWithVAE(network.music_params);
             } else {
                 // Для сети B или если Magenta не загружен - используем старый метод
                 console.log(`Генерируем музыку через Web Audio API для сети ${networkId}`);
@@ -228,6 +239,35 @@ class AIBattleSystem {
         } catch (error) {
             console.error('Ошибка генерации через Magenta.js:', error);
             throw new Error(`Magenta.js генерация не удалась: ${error.message}`);
+        }
+    }
+
+    async generateMusicWithVAE(params) {
+        try {
+            console.log('Генерация музыки через MusicVAE с параметрами:', params);
+            if (!this.musicVAE) throw new Error('MusicVAE не инициализирован');
+
+            // temperature для VAE: используем experimental_factor и variation_factor
+            const experimental = Math.max(0.1, Math.min(1.5, (params.experimental_factor || 0.2) * 1.2 + (params.variation_factor || 0.2)));
+
+            // Семплируем новую последовательность из латентного пространства
+            // numSamples=1, длина зависит от чекпоинта (mel_16bar)
+            const samples = await this.musicVAE.sample(1, experimental);
+            const sequence = samples[0];
+
+            // Устанавливаем ожидаемый tempo если есть
+            if (params.tempo) {
+                sequence.tempos = [{ qpm: params.tempo }];
+            }
+
+            // Конвертируем в аудио буфер
+            const audioBuffer = await this.convertSequenceToAudioBuffer(sequence, params);
+            return audioBuffer;
+
+        } catch (error) {
+            console.error('Ошибка генерации через MusicVAE:', error);
+            // Fallback на обычную генерацию
+            return this.generateMusic(params);
         }
     }
 
