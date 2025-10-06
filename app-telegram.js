@@ -112,6 +112,7 @@ class AIBattleSystem {
             this.setButtonsEnabled(true);
             
             console.log('Новый баттл загружен:', this.currentBattle);
+            console.log('Battle ID:', this.currentBattle.id);
         } catch (error) {
             console.error('Ошибка загрузки баттла:', error);
             this.showError('Ошибка загрузки баттла');
@@ -360,7 +361,7 @@ class AIBattleSystem {
                 },
                 body: JSON.stringify({
                     user_id: this.getUserId(),
-                    battle_id: this.currentBattle.battle_id,
+                    battle_id: this.currentBattle.id,
                     winner: `neural_net_${this.selectedNetwork}`,
                     confidence: 1.0
                 })
@@ -580,7 +581,7 @@ class AIBattleSystem {
     getUserId() {
         // Получаем ID пользователя из Telegram Web App
         if (tg.initDataUnsafe?.user?.id) {
-            return tg.initDataUnsafe.user.id;
+            return parseInt(tg.initDataUnsafe.user.id);
         }
         return 1118235356; // Дефолтный ID для тестирования
     }
