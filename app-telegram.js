@@ -74,10 +74,10 @@ class AIBattleSystem {
             
             // Инициализируем MusicVAE для сети B (Harmony Explorer)
             this.updateModelProgress(60, 'Загрузка MusicVAE (Jazz Explorer)...');
-            // Используем стабильный чекпоинт trio_16bar (hierdec-trio_16bar может отсутствовать)
-            this.musicVAE = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_16bar');
+            // Используем стабильный чекпоинт mel_16bar для совместимости
+            this.musicVAE = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_16bar');
             await this.musicVAE.initialize();
-            console.log('MusicVAE (hierdec-trio_16bar) загружен');
+            console.log('MusicVAE (mel_16bar) загружен');
 
             // Инициализируем Player для воспроизведения
             this.updateModelProgress(90, 'Инициализация Player...');
@@ -1088,7 +1088,7 @@ class AIBattleSystem {
     async generateMusicWithVAE(params, networkId) {
         try {
             this.updateGenerationProgress(20, 'Инициализация MusicVAE...');
-            console.log('Генерация джазовой музыки через hierdec-trio_16bar с параметрами:', params);
+            console.log('Генерация музыки через mel_16bar с параметрами:', params);
             if (!this.musicVAE) throw new Error('MusicVAE не инициализирован');
 
             this.updateGenerationProgress(40, 'Настройка джазовых параметров...');
