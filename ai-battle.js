@@ -52,7 +52,7 @@ class AIBattleSystem {
         try {
             this.showLoading(true);
             
-            const response = await fetch('/battle/start', {
+            const response = await fetch('https://mysicflow.onrender.com/battle/start', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -306,7 +306,7 @@ class AIBattleSystem {
         try {
             this.showLoading(true);
             
-            const response = await fetch('/battle/vote', {
+            const response = await fetch('https://mysicflow.onrender.com/battle/vote', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
