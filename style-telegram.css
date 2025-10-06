@@ -44,6 +44,358 @@ html, body {
     background: var(--bg-primary) !important;
 }
 
+/* AI Battle Styles */
+.battle-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 15px;
+    margin: 20px 0;
+    align-items: start;
+}
+
+.network-container {
+    background: var(--bg-secondary);
+    border: 2px solid transparent;
+    border-radius: 15px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.network-container:hover {
+    background: var(--bg-tertiary);
+    transform: translateY(-2px);
+}
+
+.network-container.selected {
+    border-color: var(--success-color);
+    background: rgba(52, 199, 89, 0.1);
+    box-shadow: 0 0 15px rgba(52, 199, 89, 0.3);
+}
+
+.network-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.network-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #3B82F6;
+}
+
+.network-container#networkB .network-color {
+    background: #EF4444;
+}
+
+.network-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.network-id {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.network-params {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+.network-params div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+}
+
+.network-params div:last-child {
+    margin-bottom: 0;
+}
+
+.network-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.play-button, .select-button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.play-button {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.play-button:hover {
+    background: var(--accent-secondary);
+    transform: translateY(-1px);
+}
+
+.select-button {
+    background: var(--success-color);
+    color: white;
+}
+
+.select-button:hover {
+    background: #2fb84d;
+    transform: translateY(-1px);
+}
+
+.select-button:disabled {
+    background: var(--text-hint);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.vs-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.vs-text {
+    background: linear-gradient(45deg, #3B82F6, #EF4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.voting-panel {
+    background: var(--bg-secondary);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.voting-instructions h3 {
+    margin-bottom: 8px;
+    color: var(--accent-primary);
+}
+
+.voting-instructions p {
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+.voting-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.confirm-button, .skip-button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.confirm-button {
+    background: var(--success-color);
+    color: white;
+}
+
+.confirm-button:hover:not(:disabled) {
+    background: #2fb84d;
+    transform: translateY(-1px);
+}
+
+.confirm-button:disabled {
+    background: var(--text-hint);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.skip-button {
+    background: var(--text-hint);
+    color: white;
+}
+
+.skip-button:hover {
+    background: var(--text-secondary);
+    transform: translateY(-1px);
+}
+
+.additional-controls {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.new-battle-button {
+    padding: 12px 20px;
+    background: var(--accent-secondary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.new-battle-button:hover {
+    background: #4c46d4;
+    transform: translateY(-1px);
+}
+
+.stats-container {
+    background: var(--bg-secondary);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 15px;
+    background: var(--bg-primary);
+    border-radius: 10px;
+}
+
+.stat-label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.stat-value {
+    color: var(--success-color);
+    font-size: 1rem;
+}
+
+.loading {
+    text-align: center;
+    padding: 30px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--text-hint);
+    border-top: 3px solid var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.error {
+    background: var(--error-color);
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 15px 0;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.vote-result {
+    background: var(--success-color);
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 15px 0;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* Адаптивность для AI Battle */
+@media (max-width: 768px) {
+    .battle-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .vs-divider {
+        height: auto;
+        padding: 15px 0;
+    }
+    
+    .vs-text {
+        font-size: 1.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .voting-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .confirm-button, .skip-button {
+        min-width: 200px;
+    }
+    
+    .network-container {
+        padding: 15px;
+    }
+    
+    .network-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .network-controls {
+        gap: 6px;
+    }
+    
+    .play-button, .select-button {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .voting-panel {
+        padding: 15px;
+    }
+    
+    .confirm-button, .skip-button {
+        min-width: 180px;
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+}
+
 /* Ensure no white flashes */
 * {
     background-color: inherit;

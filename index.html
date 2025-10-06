@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MusicFlow - Простой и удобный плеер</title>
+    <title>MusicFlow - AI Battle</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style-telegram.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,9 +14,6 @@
         <header class="header">
             <div class="header-content">
                 <div class="header-left">
-                    <button class="back-btn" id="backBtn" onclick="goBack()" style="display: none;">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
                     <div class="logo">
                         <i class="fas fa-music"></i>
                         <span>MusicFlow</span>
@@ -24,11 +21,8 @@
                 </div>
                 
                 <div class="header-right">
-                    <button class="favorites-btn" id="favoritesBtn" onclick="showFavorites()">
-                        <i class="fas fa-star"></i>
-                    </button>
-                    <button class="profile-btn" id="profileBtn" onclick="showSection('profile')">
-                        <i class="fas fa-user"></i>
+                    <button class="stats-btn" id="statsBtn" onclick="showStats()">
+                        <i class="fas fa-chart-bar"></i>
                     </button>
                 </div>
             </div>
@@ -36,150 +30,123 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Home Section -->
-            <section class="section active" id="homeSection">
+            <!-- AI Battle Section -->
+            <section class="section active" id="battleSection">
                 <div class="section-header">
-                    <h2>Все треки</h2>
-                    <div class="header-actions">
-                        <button class="action-btn shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()" title="Перемешать">
-                            <i class="fas fa-random"></i>
-                        </button>
-                        <button class="action-btn repeat-btn" id="repeatBtn" onclick="toggleRepeat()" title="Повтор">
-                            <i class="fas fa-redo"></i>
-                        </button>
-                        <button class="action-btn refresh-btn" onclick="loadTracks()" title="Обновить">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
+                    <h2>🤖 AI Battle</h2>
+                    <p>Конкурирующие нейросети создают музыку</p>
                 </div>
-                
-                <div class="search-container">
-                    <input type="text" id="homeSearchInput" placeholder="Поиск по названию или исполнителю..." class="search-input">
-                </div>
-                
-                <div class="tracks-container" id="tracksContainer">
-                    <div class="loading">Загрузка треков...</div>
-                </div>
-            </section>
 
-            <!-- Favorites Section -->
-            <section class="section" id="favoritesSection">
-                <div class="section-header">
-                    <h2>Избранное</h2>
+                <!-- Загрузка -->
+                <div id="loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Генерируем музыку...</p>
                 </div>
-                
-                <div class="tracks-container" id="favoritesContainer">
-                    <div class="empty-state">
-                        <i class="fas fa-star"></i>
-                        <p>Нет избранных треков</p>
-                    </div>
-                </div>
-            </section>
 
-            <!-- Playlist Section -->
-            <section class="section" id="playlistSection">
-                <div class="section-header">
-                    <h2>Плейлист</h2>
-                    <div class="header-actions">
-                        <button class="action-btn" onclick="clearPlaylist()" title="Очистить плейлист">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="playlist-content" id="playlistContent">
-                    <div class="empty-state">
-                        <i class="fas fa-list" style="font-size: 48px; color: var(--text-hint); margin-bottom: 16px;"></i>
-                        <h3>Плейлист пуст</h3>
-                        <p>Добавьте треки в плейлист для воспроизведения</p>
-                    </div>
-                </div>
-            </section>
+                <!-- Ошибка -->
+                <div id="error" class="error" style="display: none;"></div>
 
-            <!-- Profile Section -->
-            <section class="section" id="profileSection">
-                <div class="section-header">
-                    <h2>О приложении</h2>
+                <!-- Результат голосования -->
+                <div id="voteResult" class="vote-result" style="display: none;"></div>
+
+                <!-- Контейнер баттла -->
+                <div class="battle-container">
+                    <!-- Нейросеть A (левая сторона) -->
+                    <div class="network-container" id="networkA">
+                        <div class="network-header">
+                            <div class="network-color"></div>
+                            <h3 class="network-name">Melody Master</h3>
+                            <div class="network-id">🟦 A</div>
+                        </div>
+                        
+                        <div class="network-params">
+                            <div>Темп: 120 BPM</div>
+                            <div>Мелодия: 70%</div>
+                            <div>Ритм: 50%</div>
+                            <div>Энергия: 60%</div>
+                        </div>
+                        
+                        <div class="network-controls">
+                            <button id="playNetworkA" class="play-button">▶️ Воспроизвести</button>
+                            <button id="selectNetworkA" class="select-button">❤️ Выбрать A</button>
+                        </div>
+                    </div>
+
+                    <!-- VS разделитель -->
+                    <div class="vs-divider">
+                        <div class="vs-text">VS</div>
+                    </div>
+
+                    <!-- Нейросеть B (правая сторона) -->
+                    <div class="network-container" id="networkB">
+                        <div class="network-header">
+                            <div class="network-color"></div>
+                            <h3 class="network-name">Rhythm Rebel</h3>
+                            <div class="network-id">🟥 B</div>
+                        </div>
+                        
+                        <div class="network-params">
+                            <div>Темп: 140 BPM</div>
+                            <div>Мелодия: 40%</div>
+                            <div>Ритм: 80%</div>
+                            <div>Энергия: 80%</div>
+                        </div>
+                        
+                        <div class="network-controls">
+                            <button id="playNetworkB" class="play-button">▶️ Воспроизвести</button>
+                            <button id="selectNetworkB" class="select-button">❤️ Выбрать B</button>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="profile-content">
-                    <div class="profile-stats">
-                        <div class="stat-item">
-                            <div class="stat-number" id="totalTracks">0</div>
-                            <div class="stat-label">Всего треков</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number" id="favoriteCount">0</div>
-                            <div class="stat-label">В избранном</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number" id="playlistCount">0</div>
-                            <div class="stat-label">В плейлисте</div>
-                        </div>
+
+                <!-- Панель голосования -->
+                <div class="voting-panel">
+                    <div class="voting-instructions">
+                        <h3>🗳️ Выберите понравившуюся музыку:</h3>
+                        <p>Прослушайте обе композиции и выберите лучшую</p>
                     </div>
                     
-                    <div class="app-info">
-                        <div class="info-card">
-                            <i class="fas fa-music"></i>
-                            <h3>MusicFlow</h3>
-                            <p>Современное музыкальное приложение для Telegram</p>
+                    <div class="voting-buttons">
+                        <button id="confirmVote" class="confirm-button" disabled>
+                            Выберите нейросеть
+                        </button>
+                        <button id="skipBattle" class="skip-button">
+                            ⏭️ Пропустить
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Дополнительные кнопки -->
+                <div class="additional-controls">
+                    <button id="newBattle" class="new-battle-button">
+                        🎵 Новый баттл
+                    </button>
+                </div>
+            </section>
+
+            <!-- Статистика Section -->
+            <section class="section" id="statsSection">
+                <div class="section-header">
+                    <h2>📊 Статистика нейросетей</h2>
+                    <button class="back-btn" onclick="showSection('battle')">
+                        <i class="fas fa-arrow-left"></i> Назад
+                    </button>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Melody Master</div>
+                            <div class="stat-value" id="statsA">0 побед</div>
                         </div>
-                        
-                        <div class="info-card">
-                            <i class="fas fa-info-circle"></i>
-                            <h3>Версия</h3>
-                            <p>3.0.0 - Темная тема</p>
-                        </div>
-                        
-                        <div class="info-card">
-                            <i class="fas fa-heart"></i>
-                            <h3>Спасибо за использование!</h3>
-                            <p>Надеемся, вам нравится наш плеер</p>
+                        <div class="stat-item">
+                            <div class="stat-label">Rhythm Rebel</div>
+                            <div class="stat-value" id="statsB">0 побед</div>
                         </div>
                     </div>
                 </div>
             </section>
         </main>
-
-        <!-- Player -->
-        <div class="player" id="player">
-            <div class="player-content">
-                <div class="player-top">
-                    <div class="track-info">
-                        <div class="track-title" id="currentTrackTitle">Выберите трек</div>
-                        <div class="track-artist" id="currentTrackArtist">для воспроизведения</div>
-                    </div>
-                    
-                    <div class="player-controls">
-                        <button class="control-btn" id="prevBtn" onclick="playPrevious()" title="Предыдущий трек">
-                            <i class="fas fa-step-backward"></i>
-                        </button>
-                        <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()" title="Воспроизвести/Пауза">
-                            <i class="fas fa-play"></i>
-                        </button>
-                        <button class="control-btn" id="nextBtn" onclick="playNext()" title="Следующий трек">
-                            <i class="fas fa-step-forward"></i>
-                        </button>
-                        <button class="control-btn playlist-btn" onclick="showPlaylist()" title="Плейлист">
-                            <i class="fas fa-list"></i>
-                        </button>
-                        
-                    </div>
-                </div>
-                
-                <!-- Progress Bar -->
-                <div class="progress-container">
-                    <div class="time-display">
-                        <span class="current-time" id="currentTime">0:00</span>
-                        <span class="total-time" id="totalTime">0:00</span>
-                    </div>
-                    <div class="progress-bar" id="progressBar" onclick="seekTo(event)" ontouchstart="seekToTouch(event)" ontouchend="seekToTouch(event)">
-                        <div class="progress-fill" id="progressFill"></div>
-                        <div class="progress-handle" id="progressHandle"></div>
-                    </div>
-                </div>
-                
-            </div>
-        </div>
     </div>
 
     <script src="app-telegram.js"></script>
