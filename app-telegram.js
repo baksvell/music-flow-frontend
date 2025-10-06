@@ -69,15 +69,15 @@ class AIBattleSystem {
             
             // Инициализируем MelodyRNN для сети A (Melody Master)
             this.updateModelProgress(30, 'Загрузка MelodyRNN (basic_rnn) для сети A...');
-            this.melodyRNN = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/basic_rnn');
+            this.melodyRNN = new mm.MusicRNN('/models/music_rnn/basic_rnn');
             await this.melodyRNN.initialize();
             console.log('MelodyRNN basic_rnn загружен');
 
-            // Инициализируем вторую модель MelodyRNN для сети B (Attention)
-            this.updateModelProgress(60, 'Загрузка MelodyRNN (attention_rnn) для сети B...');
-            this.melodyRNNB = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/attention_rnn');
+            // Инициализируем вторую модель MelodyRNN для сети B (Melody Explorer)
+            this.updateModelProgress(60, 'Загрузка MelodyRNN (basic_rnn) для сети B...');
+            this.melodyRNNB = new mm.MusicRNN('/models/music_rnn/basic_rnn');
             await this.melodyRNNB.initialize();
-            console.log('MelodyRNN attention_rnn загружен');
+            console.log('MelodyRNN basic_rnn для сети B загружен');
 
             // Инициализируем Player для воспроизведения
             this.updateModelProgress(90, 'Инициализация Player...');
@@ -230,20 +230,21 @@ class AIBattleSystem {
 
     async generateMusicWithMagenta(params, networkId, rnnModel) {
         try {
-            console.log('Генерация музыки через Magenta.js с параметрами:', params);
+            this.updateGenerationProgress(20, 'Создание начальной последовательности...');
+            console.log(`Генерация музыки через Magenta.js (${networkId}) с параметрами:`, params);
             
             // Создаем начальную последовательность нот на основе параметров баттла
             const startSequence = this.createStartSequenceFromParams(params);
             
-            // Настраиваем параметры генерации на основе параметров нейросети
-            const temperature = this.mapParamsToTemperature(params);
-            const steps = 64; // Длина генерируемой последовательности
+            this.updateGenerationProgress(40, 'Настройка параметров генерации...');
+            // Настраиваем разные параметры для сетей A и B
+            const { temperature, steps, seed } = this.getNetworkSpecificParams(params, networkId);
             
-            console.log(`Генерируем с temperature: ${temperature}, steps: ${steps}`);
+            console.log(`Сеть ${networkId}: temperature: ${temperature}, steps: ${steps}, seed: ${seed}`);
             
+            this.updateGenerationProgress(60, `${rnnModel.name || 'MelodyRNN'} генерирует мелодию...`);
             // Генерируем мелодию через MelodyRNN
-            const modelToUse = rnnModel || this.melodyRNN;
-            const generatedSequence = await modelToUse.continueSequence(
+            const generatedSequence = await rnnModel.continueSequence(
                 startSequence, 
                 steps, 
                 temperature
@@ -321,6 +322,30 @@ class AIBattleSystem {
         };
         
         return startSequence;
+    }
+
+    getNetworkSpecificParams(params, networkId) {
+        // Базовые параметры из бэкенда
+        const experimentalFactor = params.experimental_factor || 0.1;
+        const energyLevel = params.energy_level || 0.5;
+        const melodyComplexity = params.melody_complexity || 0.5;
+        const battleSeed = params.battle_seed || 12345;
+        
+        if (networkId === 'a') {
+            // Сеть A (Melody Master): более консервативная, мелодичная
+            return {
+                temperature: 0.3 + (experimentalFactor * 0.4), // 0.3-0.7
+                steps: 48 + Math.floor(melodyComplexity * 32), // 48-80
+                seed: battleSeed + 1000 // Уникальный seed для сети A
+            };
+        } else {
+            // Сеть B (Melody Explorer): более экспериментальная, ритмичная
+            return {
+                temperature: 0.7 + (experimentalFactor * 0.6), // 0.7-1.3
+                steps: 32 + Math.floor(energyLevel * 48), // 32-80
+                seed: battleSeed + 2000 // Уникальный seed для сети B
+            };
+        }
     }
 
     mapParamsToTemperature(params) {
