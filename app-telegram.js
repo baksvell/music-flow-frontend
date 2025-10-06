@@ -20,7 +20,7 @@ class AIBattleSystem {
         this.melodyRNN = null;
         this.player = null;
         this.modelsLoaded = false;
-        this.musicVAE = null;
+        this.performanceRNN = null;
         
         this.init();
     }
@@ -72,12 +72,12 @@ class AIBattleSystem {
             await this.melodyRNN.initialize();
             console.log('MelodyRNN загружен');
             
-            // Инициализируем MusicVAE для сети B (Harmony Explorer)
-            this.updateModelProgress(60, 'Загрузка MusicVAE (Jazz Explorer)...');
-            // Используем самый стабильный чекпоинт - mel_2bar
-            this.musicVAE = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar');
-            await this.musicVAE.initialize();
-            console.log('MusicVAE (mel_2bar) загружен');
+            // Инициализируем PerformanceRNN для сети B (Rhythm Explorer)
+            this.updateModelProgress(60, 'Загрузка PerformanceRNN (Rhythm Explorer)...');
+            // Используем PerformanceRNN - более стабильная модель для ритмических композиций
+            this.performanceRNN = new mm.PerformanceRNN('https://storage.googleapis.com/magentadata/js/checkpoints/performance_rnn/groove/2bar');
+            await this.performanceRNN.initialize();
+            console.log('PerformanceRNN (groove_2bar) загружен');
 
             // Инициализируем Player для воспроизведения
             this.updateModelProgress(90, 'Инициализация Player...');
@@ -202,10 +202,10 @@ class AIBattleSystem {
             if (networkId === 'a' && this.modelsLoaded && this.melodyRNN) {
                 console.log('Генерируем музыку через Magenta.js MelodyRNN для сети A');
                 audioBuffer = await this.generateMusicWithMagenta(network.music_params, networkId);
-            } else if (networkId === 'b' && this.modelsLoaded && this.musicVAE) {
-                // Для сети B используем Magenta.js MusicVAE
-                console.log('Генерируем музыку через Magenta.js MusicVAE для сети B');
-                audioBuffer = await this.generateMusicWithVAE(network.music_params, networkId);
+            } else if (networkId === 'b' && this.modelsLoaded && this.performanceRNN) {
+                // Для сети B используем Magenta.js PerformanceRNN
+                console.log('Генерируем музыку через Magenta.js PerformanceRNN для сети B');
+                audioBuffer = await this.generateMusicWithPerformanceRNN(network.music_params, networkId);
             } else {
                 // Для сети B или если Magenta не загружен - используем старый метод
                 console.log(`Генерируем музыку через Web Audio API для сети ${networkId}`);
@@ -1026,7 +1026,7 @@ class AIBattleSystem {
                 title.textContent = `🎵 ${networkName} генерирует музыку`;
             }
             if (subtitle) {
-                const modelType = networkId === 'a' ? 'MelodyRNN (классическая мелодия)' : 'MusicVAE (джазовое трио)';
+                const modelType = networkId === 'a' ? 'MelodyRNN (классическая мелодия)' : 'PerformanceRNN (ритмическая композиция)';
                 subtitle.textContent = `Используется ${modelType}...`;
             }
             this.updateGenerationProgress(0, 'Инициализация нейросети...');
@@ -1085,24 +1085,25 @@ class AIBattleSystem {
         }
     }
 
-    async generateMusicWithVAE(params, networkId) {
+    async generateMusicWithPerformanceRNN(params, networkId) {
         try {
-            this.updateGenerationProgress(20, 'Инициализация MusicVAE...');
-            console.log('Генерация музыки через mel_2bar с параметрами:', params);
-            if (!this.musicVAE) throw new Error('MusicVAE не инициализирован');
+            this.updateGenerationProgress(20, 'Инициализация PerformanceRNN...');
+            console.log('Генерация ритмической музыки через PerformanceRNN с параметрами:', params);
+            if (!this.performanceRNN) throw new Error('PerformanceRNN не инициализирован');
 
-            this.updateGenerationProgress(40, 'Настройка джазовых параметров...');
-            // temperature для VAE: используем experimental_factor и variation_factor
-            // Для джазовой модели делаем более консервативную температуру
+            this.updateGenerationProgress(40, 'Настройка ритмических параметров...');
+            // temperature для PerformanceRNN: используем experimental_factor и variation_factor
             const experimental = Math.max(0.3, Math.min(1.2, (params.experimental_factor || 0.3) * 0.8 + (params.variation_factor || 0.2) * 0.5));
 
-            console.log(`Генерируем джазовое трио с temperature: ${experimental}`);
+            console.log(`Генерируем ритмическую композицию с temperature: ${experimental}`);
 
-            this.updateGenerationProgress(60, 'MusicVAE генерирует мелодию...');
-            // Семплируем новую последовательность из латентного пространства
-            // mel_2bar генерирует 2-тактовые мелодические композиции
-            const samples = await this.musicVAE.sample(1, experimental);
-            const sequence = samples[0];
+            this.updateGenerationProgress(60, 'PerformanceRNN генерирует ритм...');
+            // Генерируем ритмическую последовательность
+            const sequence = await this.performanceRNN.continueSequence(
+                [], // пустая начальная последовательность
+                32, // количество шагов
+                experimental
+            );
 
             this.updateGenerationProgress(80, 'Настройка темпа и конвертация...');
             // Устанавливаем tempo из параметров баттла
@@ -1110,13 +1111,13 @@ class AIBattleSystem {
                 sequence.tempos = [{ qpm: params.tempo }];
             }
 
-            // Для джазовой модели добавляем специфичные настройки
+            // Для ритмической модели добавляем специфичные настройки
             if (params.energy_level && params.energy_level > 0.7) {
                 // Высокая энергия = более быстрый темп
                 sequence.tempos = [{ qpm: Math.min(180, params.tempo * 1.2) }];
             }
 
-            console.log('mel_2bar сгенерировал мелодическую последовательность:', sequence);
+            console.log('PerformanceRNN сгенерировал ритмическую последовательность:', sequence);
 
             // Конвертируем в аудио буфер
             const audioBuffer = await this.convertSequenceToAudioBuffer(sequence, params);
@@ -1125,7 +1126,7 @@ class AIBattleSystem {
             return audioBuffer;
 
         } catch (error) {
-            console.error('Ошибка генерации через hierdec-trio_16bar:', error);
+            console.error('Ошибка генерации через PerformanceRNN:', error);
             // Fallback на обычную генерацию
             return this.generateMusic(params);
         }
