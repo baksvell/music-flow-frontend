@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Battle - MusicFlow</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="ai-battle.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок -->
+        <header class="header">
+            <h1>🤖 AI Battle</h1>
+            <p>Конкурирующие нейросети создают музыку</p>
+        </header>
+
+        <!-- Загрузка -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Генерируем музыку...</p>
+        </div>
+
+        <!-- Ошибка -->
+        <div id="error" class="error" style="display: none;"></div>
+
+        <!-- Результат голосования -->
+        <div id="voteResult" class="vote-result" style="display: none;"></div>
+
+        <!-- Основной контент -->
+        <main class="battle-container">
+            <!-- Нейросеть A (левая сторона) -->
+            <div class="network-container" id="networkA">
+                <div class="network-header">
+                    <div class="network-color"></div>
+                    <h2 class="network-name">Melody Master</h2>
+                    <div class="network-id">🟦 A</div>
+                </div>
+                
+                <div class="network-params">
+                    <div>Темп: 120 BPM</div>
+                    <div>Мелодия: 70%</div>
+                    <div>Ритм: 50%</div>
+                    <div>Энергия: 60%</div>
+                </div>
+                
+                <div class="network-controls">
+                    <button id="playNetworkA" class="play-button">▶️ Воспроизвести</button>
+                    <button id="selectNetworkA" class="select-button">❤️ Выбрать A</button>
+                </div>
+            </div>
+
+            <!-- VS разделитель -->
+            <div class="vs-divider">
+                <div class="vs-text">VS</div>
+            </div>
+
+            <!-- Нейросеть B (правая сторона) -->
+            <div class="network-container" id="networkB">
+                <div class="network-header">
+                    <div class="network-color"></div>
+                    <h2 class="network-name">Rhythm Rebel</h2>
+                    <div class="network-id">🟥 B</div>
+                </div>
+                
+                <div class="network-params">
+                    <div>Темп: 140 BPM</div>
+                    <div>Мелодия: 40%</div>
+                    <div>Ритм: 80%</div>
+                    <div>Энергия: 80%</div>
+                </div>
+                
+                <div class="network-controls">
+                    <button id="playNetworkB" class="play-button">▶️ Воспроизвести</button>
+                    <button id="selectNetworkB" class="select-button">❤️ Выбрать B</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Панель голосования -->
+        <div class="voting-panel">
+            <div class="voting-instructions">
+                <h3>🗳️ Выберите понравившуюся музыку:</h3>
+                <p>Прослушайте обе композиции и выберите лучшую</p>
+            </div>
+            
+            <div class="voting-buttons">
+                <button id="confirmVote" class="confirm-button" disabled>
+                    Выберите нейросеть
+                </button>
+                <button id="skipBattle" class="skip-button">
+                    ⏭️ Пропустить
+                </button>
+            </div>
+        </div>
+
+        <!-- Статистика -->
+        <div class="stats-container">
+            <h3>📊 Статистика нейросетей</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Melody Master</div>
+                    <div class="stat-value" id="statsA">0 побед</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Rhythm Rebel</div>
+                    <div class="stat-value" id="statsB">0 побед</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Дополнительные кнопки -->
+        <div class="additional-controls">
+            <button id="newBattle" class="new-battle-button">
+                🎵 Новый баттл
+            </button>
+        </div>
+    </div>
+
+    <script src="ai-battle.js"></script>
+</body>
+</html>
