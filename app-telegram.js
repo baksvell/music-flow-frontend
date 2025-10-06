@@ -206,7 +206,7 @@ class AIBattleSystem {
         return notes;
     }
 
-    generateMelodySequence(notes, pattern, density, complexity) {
+    generateMelodySequence(notes, pattern, density, complexity, seedRandom) {
         const sequence = [];
         const noteCount = Math.floor(density * 16) + 4; // 4-20 нот
         
@@ -230,7 +230,7 @@ class AIBattleSystem {
                     noteIndex = (i * 2) % notes.length;
                     break;
                 case "leap_and_step":
-                    noteIndex = i % 3 === 0 ? Math.floor(Math.random() * notes.length) : (i - 1) % notes.length;
+                    noteIndex = i % 3 === 0 ? Math.floor(seedRandom.random() * notes.length) : (i - 1) % notes.length;
                     break;
                 case "arpeggio":
                     noteIndex = (i * 3) % notes.length;
@@ -242,14 +242,28 @@ class AIBattleSystem {
             }
             
             // Добавляем случайность на основе сложности
-            if (complexity > 0.5 && Math.random() < complexity) {
-                noteIndex = Math.floor(Math.random() * notes.length);
+            if (complexity > 0.5 && seedRandom.random() < complexity) {
+                noteIndex = Math.floor(seedRandom.random() * notes.length);
             }
             
             sequence.push(notes[noteIndex]);
         }
         
         return sequence;
+    }
+
+    createSeededRandom(seed) {
+        // Простой линейный конгруэнтный генератор для детерминированной случайности
+        let current = seed;
+        return {
+            random: () => {
+                current = (current * 1664525 + 1013904223) % 4294967296;
+                return current / 4294967296;
+            },
+            choice: (array) => {
+                return array[Math.floor(this.createSeededRandom(current).random() * array.length)];
+            }
+        };
     }
 
     generateMelody(buffer, params) {
@@ -263,13 +277,18 @@ class AIBattleSystem {
         const melodyPattern = params.melody_pattern || "simple_repetition";
         const noteDensity = params.note_density || 0.5;
         const pitchRange = params.pitch_range || 0.5;
+        const battleSeed = params.battle_seed || Math.random() * 1000000;
+        const variationFactor = params.variation_factor || 0.2;
         
         const sampleRate = buffer.sampleRate;
         const duration = buffer.length / sampleRate;
         
+        // Используем battle_seed для детерминированной генерации
+        const seedRandom = this.createSeededRandom(battleSeed);
+        
         // Определяем ноты на основе тональности
         const notes = this.getNotesForKey(key, pitchRange);
-        const melodyNotes = this.generateMelodySequence(notes, melodyPattern, noteDensity, melodyComplexity);
+        const melodyNotes = this.generateMelodySequence(notes, melodyPattern, noteDensity, melodyComplexity, seedRandom);
         
         // Генерируем мелодию на основе последовательности нот
         const noteDuration = duration / melodyNotes.length;
@@ -279,14 +298,18 @@ class AIBattleSystem {
             
             // Определяем текущую ноту на основе времени
             const noteIndex = Math.floor(time / noteDuration) % melodyNotes.length;
-            const frequency = melodyNotes[noteIndex];
+            let frequency = melodyNotes[noteIndex];
+            
+            // Добавляем вариации частоты на основе variation_factor
+            const frequencyVariation = 1 + (seedRandom.random() - 0.5) * variationFactor * 0.1;
+            frequency *= frequencyVariation;
             
             // Добавляем плавные переходы между нотами
             const noteStartTime = noteIndex * noteDuration;
             const noteEndTime = (noteIndex + 1) * noteDuration;
             const noteProgress = (time - noteStartTime) / noteDuration;
             
-            // Амплитуда с учетом времени ноты
+            // Амплитуда с учетом времени ноты и вариаций
             let amplitude = energyLevel * 0.3;
             if (noteProgress < 0.1) {
                 amplitude *= noteProgress * 10; // Плавное нарастание
@@ -294,17 +317,28 @@ class AIBattleSystem {
                 amplitude *= (1 - noteProgress) * 10; // Плавное затухание
             }
             
-            // Генерируем волну
+            // Добавляем амплитудные вариации
+            const amplitudeVariation = 1 + (seedRandom.random() - 0.5) * variationFactor * 0.2;
+            amplitude *= amplitudeVariation;
+            
+            // Генерируем волну с дополнительными гармониками
             const wave = Math.sin(2 * Math.PI * frequency * time) * amplitude;
             
             // Добавляем обертоны для богатства звука
             const overtone1 = Math.sin(2 * Math.PI * frequency * 2 * time) * amplitude * 0.3;
             const overtone2 = Math.sin(2 * Math.PI * frequency * 3 * time) * amplitude * 0.1;
             
-            const finalWave = wave + overtone1 + overtone2;
+            // Добавляем дополнительные гармоники на основе experimental_factor
+            const experimentalFactor = params.experimental_factor || 0.1;
+            let experimentalWave = 0;
+            if (experimentalFactor > 0.3) {
+                experimentalWave = Math.sin(2 * Math.PI * frequency * 1.5 * time) * amplitude * experimentalFactor * 0.1;
+            }
+            
+            const finalWave = wave + overtone1 + overtone2 + experimentalWave;
             
             leftChannel[i] = finalWave;
-            rightChannel[i] = finalWave * 0.8; // Небольшая разница между каналами
+            rightChannel[i] = finalWave * (0.8 + seedRandom.random() * 0.2); // Больше вариаций между каналами
         }
     }
 
