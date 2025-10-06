@@ -74,10 +74,10 @@ class AIBattleSystem {
             
             // Инициализируем MusicVAE для сети B (Harmony Explorer)
             this.updateModelProgress(60, 'Загрузка MusicVAE (Jazz Explorer)...');
-            // Используем стабильный чекпоинт mel_16bar для совместимости
-            this.musicVAE = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_16bar');
+            // Используем самый стабильный чекпоинт - mel_2bar
+            this.musicVAE = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar');
             await this.musicVAE.initialize();
-            console.log('MusicVAE (mel_16bar) загружен');
+            console.log('MusicVAE (mel_2bar) загружен');
 
             // Инициализируем Player для воспроизведения
             this.updateModelProgress(90, 'Инициализация Player...');
@@ -288,7 +288,7 @@ class AIBattleSystem {
                 sequence.tempos = [{ qpm: Math.min(180, params.tempo * 1.2) }];
             }
 
-            console.log('hierdec-trio_16bar сгенерировал джазовую последовательность:', sequence);
+            console.log('mel_2bar сгенерировал мелодическую последовательность:', sequence);
 
             // Конвертируем в аудио буфер
             const audioBuffer = await this.convertSequenceToAudioBuffer(sequence, params);
@@ -1088,7 +1088,7 @@ class AIBattleSystem {
     async generateMusicWithVAE(params, networkId) {
         try {
             this.updateGenerationProgress(20, 'Инициализация MusicVAE...');
-            console.log('Генерация музыки через mel_16bar с параметрами:', params);
+            console.log('Генерация музыки через mel_2bar с параметрами:', params);
             if (!this.musicVAE) throw new Error('MusicVAE не инициализирован');
 
             this.updateGenerationProgress(40, 'Настройка джазовых параметров...');
@@ -1098,9 +1098,9 @@ class AIBattleSystem {
 
             console.log(`Генерируем джазовое трио с temperature: ${experimental}`);
 
-            this.updateGenerationProgress(60, 'MusicVAE генерирует джазовое трио...');
+            this.updateGenerationProgress(60, 'MusicVAE генерирует мелодию...');
             // Семплируем новую последовательность из латентного пространства
-            // hierdec-trio_16bar генерирует 16-тактовые джазовые композиции
+            // mel_2bar генерирует 2-тактовые мелодические композиции
             const samples = await this.musicVAE.sample(1, experimental);
             const sequence = samples[0];
 
@@ -1116,7 +1116,7 @@ class AIBattleSystem {
                 sequence.tempos = [{ qpm: Math.min(180, params.tempo * 1.2) }];
             }
 
-            console.log('hierdec-trio_16bar сгенерировал джазовую последовательность:', sequence);
+            console.log('mel_2bar сгенерировал мелодическую последовательность:', sequence);
 
             // Конвертируем в аудио буфер
             const audioBuffer = await this.convertSequenceToAudioBuffer(sequence, params);
