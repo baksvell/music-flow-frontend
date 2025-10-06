@@ -74,7 +74,8 @@ class AIBattleSystem {
             
             // Инициализируем MusicVAE для сети B (Harmony Explorer)
             this.updateModelProgress(60, 'Загрузка MusicVAE (Jazz Explorer)...');
-            this.musicVAE = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/hierdec-trio_16bar');
+            // Используем стабильный чекпоинт trio_16bar (hierdec-trio_16bar может отсутствовать)
+            this.musicVAE = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_16bar');
             await this.musicVAE.initialize();
             console.log('MusicVAE (hierdec-trio_16bar) загружен');
 
