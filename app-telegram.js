@@ -73,11 +73,11 @@ class AIBattleSystem {
             await this.melodyRNN.initialize();
             console.log('MelodyRNN basic_rnn загружен');
 
-            // Инициализируем вторую модель MelodyRNN для сети B (Lookback)
-            this.updateModelProgress(60, 'Загрузка MelodyRNN (lookback_rnn) для сети B...');
-            this.melodyRNNB = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/lookback_rnn');
+            // Инициализируем вторую модель MelodyRNN для сети B (Attention)
+            this.updateModelProgress(60, 'Загрузка MelodyRNN (attention_rnn) для сети B...');
+            this.melodyRNNB = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/attention_rnn');
             await this.melodyRNNB.initialize();
-            console.log('MelodyRNN lookback_rnn загружен');
+            console.log('MelodyRNN attention_rnn загружен');
 
             // Инициализируем Player для воспроизведения
             this.updateModelProgress(90, 'Инициализация Player...');
@@ -1027,7 +1027,7 @@ class AIBattleSystem {
                 title.textContent = `🎵 ${networkName} генерирует музыку`;
             }
             if (subtitle) {
-                const modelType = networkId === 'a' ? 'MelodyRNN basic_rnn' : 'MelodyRNN lookback_rnn';
+                const modelType = networkId === 'a' ? 'MelodyRNN basic_rnn' : 'MelodyRNN attention_rnn';
                 subtitle.textContent = `Используется ${modelType}...`;
             }
             this.updateGenerationProgress(0, 'Инициализация нейросети...');
