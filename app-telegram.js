@@ -70,10 +70,10 @@ class AIBattleSystem {
             console.log('MelodyRNN загружен');
             
             // Инициализируем MusicVAE для сети B (Harmony Explorer)
-            // 16 тактовая мелодическая модель для большего разнообразия
-            this.musicVAE = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_16bar');
+            // Джазовая трио модель для контраста с мелодической сетью A
+            this.musicVAE = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/hierdec-trio_16bar');
             await this.musicVAE.initialize();
-            console.log('MusicVAE (mel_16bar) загружен');
+            console.log('MusicVAE (hierdec-trio_16bar) загружен');
 
             // Инициализируем Player для воспроизведения
             this.player = new mm.Player();
@@ -244,28 +244,39 @@ class AIBattleSystem {
 
     async generateMusicWithVAE(params) {
         try {
-            console.log('Генерация музыки через MusicVAE с параметрами:', params);
+            console.log('Генерация джазовой музыки через hierdec-trio_16bar с параметрами:', params);
             if (!this.musicVAE) throw new Error('MusicVAE не инициализирован');
 
             // temperature для VAE: используем experimental_factor и variation_factor
-            const experimental = Math.max(0.1, Math.min(1.5, (params.experimental_factor || 0.2) * 1.2 + (params.variation_factor || 0.2)));
+            // Для джазовой модели делаем более консервативную температуру
+            const experimental = Math.max(0.3, Math.min(1.2, (params.experimental_factor || 0.3) * 0.8 + (params.variation_factor || 0.2) * 0.5));
+
+            console.log(`Генерируем джазовое трио с temperature: ${experimental}`);
 
             // Семплируем новую последовательность из латентного пространства
-            // numSamples=1, длина зависит от чекпоинта (mel_16bar)
+            // hierdec-trio_16bar генерирует 16-тактовые джазовые композиции
             const samples = await this.musicVAE.sample(1, experimental);
             const sequence = samples[0];
 
-            // Устанавливаем ожидаемый tempo если есть
+            // Устанавливаем tempo из параметров баттла
             if (params.tempo) {
                 sequence.tempos = [{ qpm: params.tempo }];
             }
+
+            // Для джазовой модели добавляем специфичные настройки
+            if (params.energy_level && params.energy_level > 0.7) {
+                // Высокая энергия = более быстрый темп
+                sequence.tempos = [{ qpm: Math.min(180, params.tempo * 1.2) }];
+            }
+
+            console.log('hierdec-trio_16bar сгенерировал джазовую последовательность:', sequence);
 
             // Конвертируем в аудио буфер
             const audioBuffer = await this.convertSequenceToAudioBuffer(sequence, params);
             return audioBuffer;
 
         } catch (error) {
-            console.error('Ошибка генерации через MusicVAE:', error);
+            console.error('Ошибка генерации через hierdec-trio_16bar:', error);
             // Fallback на обычную генерацию
             return this.generateMusic(params);
         }
